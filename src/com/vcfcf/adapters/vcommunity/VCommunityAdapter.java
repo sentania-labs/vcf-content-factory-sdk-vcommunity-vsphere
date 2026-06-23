@@ -1,0 +1,409 @@
+package com.vcfcf.adapters.vcommunity;
+
+import com.vcfcf.adapter.VcfCfAdapter;
+import com.vcfcf.adapter.http.ManagedHttpClient;
+import com.vcfcf.adapter.spi.ResourceSink;
+import com.vcfcf.adapter.spi.VcfCfCollector;
+import com.vcfcf.adapter.spi.VcfCfTester;
+import com.vcfcf.adapter.stitch.SuiteApiStitcher;
+
+import com.integrien.alive.common.adapter3.AdapterBase;
+import com.integrien.alive.common.adapter3.MetricData;
+import com.integrien.alive.common.adapter3.MetricKey;
+import com.integrien.alive.common.adapter3.ResourceKey;
+import com.integrien.alive.common.adapter3.ResourceStatus;
+import com.integrien.alive.common.adapter3.TestParam;
+import com.integrien.alive.common.adapter3.config.AdapterConfig;
+import com.integrien.alive.common.adapter3.config.ResourceConfig;
+import com.integrien.alive.common.adapter3.config.ResourceIdentifierConfig;
+import com.integrien.alive.common.util.CommonConstants.ResourceStatusEnum;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * vCommunity vSphere adapter ({@code vcfcf_vcommunity_vsphere}) — the vSphere/
+ * vCenter fork of the unified vCommunity adapter (native Java SDK rewrite of
+ * {@code vmbro/VCF-Operations-vCommunity}, Onur Yuzseven, CC-licensed). One of
+ * three paks the unified adapter was split into per
+ * {@code designs/managementpacks/vcommunity-three-adapter-split.md}; this pak
+ * owns the bulk vSphere collection surface read over the vim25 vCenter session.
+ *
+ * <p><b>Surface.</b> Cluster HA/DRS/EVC/DRS-Score, host advanced settings / VIB
+ * packages / install date / licensing / NIC uplinks, VM config / extra-config /
+ * SCSI controllers / snapshot count, and the passive VMware-Tools
+ * {@code Guest OS|Operating System|*} path. The in-guest guest-ops surface
+ * (Windows services, in-guest CSV OS-info, Windows event logs via the vCenter
+ * GuestOperationsManager) belongs to the {@code vcommunity-os} pak and is NOT
+ * collected here ({@code GuestOpsClient} was stripped from this fork).
+ *
+ * <p><b>Shape.</b> Pure ARIA_OPS-style stitching. Declares one synthetic INTERNAL
+ * anchor ({@code vCommunityWorld}) so the ResourceCollection is non-empty, and
+ * pushes every {@code vCommunity|...} property/metric onto existing foreign
+ * VMWARE {@code ClusterComputeResource} / {@code HostSystem} /
+ * {@code VirtualMachine} resources via the Suite API. No new object types, no
+ * VMWARE topology edits ({@code setrelationships-foreign-adapter-scoped}).
+ *
+ * <p><b>Stitch identity (binding — design §2 Risk #2).</b> Foreign-resource
+ * resolution is scoped to THIS instance's vCenter Instance UUID, pinned from the
+ * live SOAP session every cycle ({@link VCommunityStitcher#setOwningVcUuid}). The
+ * build-2 {@code VMEntityVCID} MOID-scoping fix is retained verbatim
+ * ({@code lessons/stitch-moid-not-unique-across-vcenters.md}); a bare MOID is not
+ * unique across vCenters.
+ *
+ * <p><b>Config.</b> The four vSphere central-store check-list files are fetched
+ * by name via the SDK-injected Suite API channel every cycle
+ * ({@link SolutionConfigStore}), with last-good caching — never silently
+ * collecting with empty lists.
+ *
+ * <p><b>Events.</b> Foreign-resource event push is TOOLSET GAP #1 (the framework
+ * Suite API facade exposes only properties/stats). Per the design's accepted
+ * staged plan, host install-date failures are surfaced as alertable PROPERTIES
+ * this release; real foreign events are v1.1.
+ */
+public final class VCommunityAdapter extends VcfCfAdapter<VCommunityConfig> {
+
+    private static final String ADAPTER_KIND = "vcfcf_vcommunity_vsphere";
+    private static final String WORLD_KIND = "vCommunityWorld";
+
+    private volatile VCommunityVSphereClient vsphere;
+    private volatile SuiteApiStitcher suiteStitcher;
+    private volatile VCommunityStitcher stitcher;
+    private volatile SolutionConfigStore configStore;
+
+    public VCommunityAdapter() {
+        super(ADAPTER_KIND);
+    }
+
+    public VCommunityAdapter(String adapterDir, Integer adapterInstanceId) {
+        super(ADAPTER_KIND, adapterDir, adapterInstanceId);
+    }
+
+    @Override
+    public boolean isDynamicMetricsAllowed() {
+        return true;
+    }
+
+    // =====================================================================
+    // configureAdapter
+    // =====================================================================
+
+    @Override
+    protected void configureAdapter(ResourceStatus status, ResourceConfig rc) {
+        VCommunityConfig cfg = buildConfig(rc);
+        this.config = cfg;
+
+        this.vsphere = new VCommunityVSphereClient(
+                cfg.soapHostPort(), cfg.username, cfg.password,
+                sslSocketFactoryFor(cfg), cfg.allowInsecure,
+                componentLogger(VCommunityVSphereClient.class));
+
+        this.configStore = new SolutionConfigStore(
+                componentLogger(SolutionConfigStore.class));
+
+        // Ambient Suite API stitching — same path the compliance adapter proves.
+        // Null on a remote collector without maintenance credentials; the cycle
+        // logs the gap rather than aborting. EMPIRICAL VERIFY (design Config §):
+        // confirm the injected client resolves from a non-localhost collector
+        // during v1 dev — do not assume localhost.
+        try {
+            this.suiteStitcher = SuiteApiStitcher.create(
+                    this, componentLogger(SuiteApiStitcher.class));
+            this.stitcher = new VCommunityStitcher(
+                    this.suiteStitcher,
+                    componentLogger(VCommunityStitcher.class));
+        } catch (RuntimeException e) {
+            this.suiteStitcher = null;
+            this.stitcher = null;
+            logWarn("Ambient Suite API stitcher unavailable — vCommunity data "
+                    + "will not be pushed onto VMWARE resources this instance, "
+                    + "and central config files cannot be fetched: "
+                    + e.getMessage());
+        }
+
+        logInfo("VCommunityAdapter configured: vcenter=" + cfg.vcenterHost
+                + " port=" + cfg.port
+                + " allowInsecure=" + cfg.allowInsecure
+                + " stitcher=" + (stitcher != null));
+    }
+
+    private VCommunityConfig buildConfig(ResourceConfig rc) {
+        // vCenter Credential ("vsphere_user"): vCenter user/password only. The
+        // vSphere pak has no Windows credential or guest-ops path.
+        return new VCommunityConfig(
+                getIdentifier(rc, "host"),
+                getIdentifier(rc, "port"),
+                getCredentialField(rc, "user"),
+                getCredentialField(rc, "password"),         // REDACT-SECRET
+                getIdentifier(rc, "allowInsecure"),
+                getIdentifier(rc, "esxi_adv_settings_config_file"),
+                getIdentifier(rc, "esxi_vib_driver_config_file"),
+                getIdentifier(rc, "vm_adv_settings_config_file"),
+                getIdentifier(rc, "vm_configuration_config_file"));
+    }
+
+    private javax.net.ssl.SSLSocketFactory sslSocketFactoryFor(
+            VCommunityConfig cfg) {
+        if (cfg.allowInsecure) {
+            logWarn("allowInsecure=true — vCenter SOAP TLS certificate "
+                    + "validation is DISABLED for this instance (lab opt-out).");
+            return insecureSslContext().getSocketFactory();
+        }
+        javax.net.ssl.SSLContext platform = getPlatformSslContext();
+        if (platform != null) return platform.getSocketFactory();
+        logWarn("Platform SSL context unavailable and allowInsecure=false — "
+                + "using the JDK default trust store for the vCenter SOAP "
+                + "connection.");
+        return (javax.net.ssl.SSLSocketFactory)
+                javax.net.ssl.SSLSocketFactory.getDefault();
+    }
+
+    // =====================================================================
+    // Tester — self-contained (controller calls onTest on a bare instance)
+    // =====================================================================
+
+    @Override
+    protected VcfCfTester<VCommunityConfig> getTester() {
+        return (cfg, http, param) -> {
+            ResourceConfig rc = testResourceConfig(param);
+            if (rc == null) {
+                throw new Exception("Test-connection: no adapter-instance "
+                        + "ResourceConfig on TestParam — cannot read vCenter "
+                        + "host/credentials to test");
+            }
+            VCommunityConfig testCfg = buildConfig(rc);
+            VCommunityVSphereClient testVs = new VCommunityVSphereClient(
+                    testCfg.soapHostPort(), testCfg.username, testCfg.password,
+                    sslSocketFactoryFor(testCfg), testCfg.allowInsecure,
+                    componentLogger(VCommunityVSphereClient.class));
+            testVs.connect();
+            try {
+                int clusters = testVs.getClusters().size();
+                int hosts = testVs.getHosts().size();
+                int vms = testVs.getVms().size();
+                StringBuilder sb = new StringBuilder("Test OK: connected to "
+                        + testCfg.vcenterHost + " — " + clusters + " cluster(s), "
+                        + hosts + " host(s), " + vms + " VM(s) visible");
+
+                // Per-file config feedback (design test() requirement). Best-
+                // effort: a self-contained tester has no ambient stitcher, so
+                // report which files are configured and that the central store
+                // is read live during collection. The vSphere pak ships only the
+                // four vSphere check-list files.
+                sb.append("; central config files: ")
+                        .append(testCfg.esxiAdvSettingsConfigFile).append(", ")
+                        .append(testCfg.esxiVibDriverConfigFile).append(", ")
+                        .append(testCfg.vmAdvSettingsConfigFile).append(", ")
+                        .append(testCfg.vmConfigurationConfigFile)
+                        .append(" (fetched from SolutionConfig/ each cycle)");
+                logInfo(sb.toString());
+            } finally {
+                testVs.disconnect();
+            }
+        };
+    }
+
+    private static ResourceConfig testResourceConfig(TestParam param) {
+        if (param == null) return null;
+        AdapterConfig adConf = param.getAdapterConfig();
+        if (adConf == null) return null;
+        return adConf.getAdapterInstResource();
+    }
+
+    // =====================================================================
+    // Discovery — the single synthetic vCommunityWorld anchor
+    // =====================================================================
+
+    @Override
+    protected boolean discoverOnCollect() {
+        return true;
+    }
+
+    @Override
+    protected void enumerateResources(ResourceSink sink)
+            throws InterruptedException, Exception {
+        sink.accept(worldResourceConfig());
+    }
+
+    private ResourceConfig worldResourceConfig() {
+        ResourceKey key = new ResourceKey(
+                "vCommunity World", WORLD_KIND, ADAPTER_KIND);
+        key.addIdentifier(new ResourceIdentifierConfig(
+                "world_id", "vcommunity_world", true));
+        return new ResourceConfig(key);
+    }
+
+    // =====================================================================
+    // Collector
+    // =====================================================================
+
+    @Override
+    protected VcfCfCollector<VCommunityConfig> getCollector() {
+        return new VcfCfCollector<VCommunityConfig>() {
+            @Override
+            public void collect(VCommunityConfig cfg, ManagedHttpClient http,
+                    ResourceConfig rc, List<MetricData> out, AdapterBase adapter)
+                    throws InterruptedException, Exception {
+                if (isAbortRequested()) return;
+                if (WORLD_KIND.equals(rc.getResourceKind())) {
+                    collectWorld(out);
+                }
+            }
+
+            @Override
+            public ResourceStatusEnum mapCollectException(Exception e) {
+                // A total collect failure (vCenter unreachable / DNS NXDOMAIN /
+                // connection refused) must NOT look like a silent
+                // DATA_RECEIVING-with-0-metrics cycle (the NXDOMAIN episode).
+                // Map the connectivity faults to DOWN so the adapter-instance /
+                // world status turns red with the actionable message thrown from
+                // collectWorld(); everything else is ERROR. Either way the
+                // framework sets a non-DATA_RECEIVING status and logs the message.
+                Throwable t = e;
+                while (t != null) {
+                    if (t instanceof java.net.UnknownHostException
+                            || t instanceof java.net.ConnectException
+                            || t instanceof java.net.NoRouteToHostException
+                            || t instanceof java.net.SocketTimeoutException) {
+                        return ResourceStatusEnum.RESOURCE_STATUS_DOWN;
+                    }
+                    t = t.getCause();
+                }
+                return ResourceStatusEnum.RESOURCE_STATUS_ERROR;
+            }
+        };
+    }
+
+    /**
+     * Per-cycle collection body. Runs once for {@code vCommunityWorld}. Walks
+     * vSphere inventory, fetches the four vSphere check-lists, pushes the
+     * {@code vCommunity|...} property/metric set onto matched foreign VMWARE
+     * resources, and emits world-level operability metrics + config-degradation
+     * notices onto {@code out}.
+     */
+    private void collectWorld(List<MetricData> out) throws Exception {
+        long ts = System.currentTimeMillis();
+
+        if (stitcher == null) {
+            logWarn("collectWorld: Suite API stitcher unavailable — skipping "
+                    + "this cycle (first-cycle null client or no maintenance "
+                    + "credentials). The next cycle catches up.");
+            prop(out, "Summary|status",
+                    "Suite API stitcher unavailable this cycle");
+            return;
+        }
+
+        // Connect to vCenter. A total failure here (unreachable host, DNS
+        // NXDOMAIN, refused connection, login fault) is rethrown with an
+        // actionable, secret-free message and propagated so the framework's
+        // onCollect catch sets the world resource status via
+        // mapCollectException() (DOWN for connectivity faults) — NOT a silent
+        // DATA_RECEIVING-with-0-metrics cycle. The NXDOMAIN episode is the
+        // motivating failure: cannot resolve/connect must turn the instance red.
+        try {
+            vsphere.ensureConnected();
+        } catch (java.net.UnknownHostException uhe) {
+            throw new java.net.UnknownHostException("vCommunity collection failed: "
+                    + "cannot resolve vCenter host '" + config.vcenterHost
+                    + "' (DNS NXDOMAIN). Check the vCenter Server adapter-instance "
+                    + "field and collector DNS.");
+        } catch (java.net.ConnectException | java.net.NoRouteToHostException
+                | java.net.SocketTimeoutException ne) {
+            throw new Exception("vCommunity collection failed: cannot connect to "
+                    + "vCenter '" + config.vcenterHost + ":" + config.port
+                    + "' (" + ne.getClass().getSimpleName() + ": "
+                    + ne.getMessage() + "). Check vCenter reachability/port.", ne);
+        }
+        // Other connect-time errors (login fault, etc.) propagate as-is;
+        // VCommunityVSphereClient already builds a secret-free,
+        // faultstring-bearing message that the framework logs + statuses.
+
+        // Scope foreign-resource resolution to THIS instance's vCenter (the
+        // MOID-trap fix, build-2) — a bare MOID is not unique across vCenters.
+        // The UUID comes from the live SOAP session; a null value degrades to the
+        // unscoped matcher (single-vCenter safe).
+        stitcher.setOwningVcUuid(vsphere.getVCenterInstanceUuid());
+
+        // Load foreign VMWARE resource indexes.
+        safe(() -> stitcher.loadClusterResources(), "loadClusterResources");
+        safe(() -> stitcher.loadHostResources(), "loadHostResources");
+        safe(() -> stitcher.loadVmResources(), "loadVmResources");
+
+        // Fetch the four vSphere central check-lists (per cycle, last-good cache).
+        SolutionConfigStore.FetchResult esxiAdv = configStore.fetchList(
+                suiteStitcher, config.esxiAdvSettingsConfigFile);
+        SolutionConfigStore.FetchResult esxiVib = configStore.fetchList(
+                suiteStitcher, config.esxiVibDriverConfigFile);
+        SolutionConfigStore.FetchResult vmAdv = configStore.fetchList(
+                suiteStitcher, config.vmAdvSettingsConfigFile);
+        SolutionConfigStore.FetchResult vmOpts = configStore.fetchList(
+                suiteStitcher, config.vmConfigurationConfigFile);
+
+        int clusters = ClusterCollector.collect(vsphere, stitcher,
+                componentLogger(ClusterCollector.class), ts);
+        int hosts = HostCollector.collect(vsphere, stitcher,
+                componentLogger(HostCollector.class),
+                esxiAdv.items, esxiAdv.usable,
+                esxiVib.items, esxiVib.usable, ts);
+        VmCollector.Result vmResult = VmCollector.collect(vsphere, stitcher,
+                componentLogger(VmCollector.class), config,
+                vmAdv.items, vmAdv.usable, vmOpts.items, vmOpts.usable, ts);
+
+        // World operability metrics.
+        metric(out, "Summary|clusters_stitched", clusters, ts);
+        metric(out, "Summary|hosts_stitched", hosts, ts);
+        metric(out, "Summary|vms_stitched", vmResult.stitched, ts);
+
+        prop(out, "Summary|last_scan_timestamp", Instant.now().toString());
+        prop(out, "Summary|config_file_status", summarizeConfig());
+        prop(out, "Summary|status", "OK");
+
+        logInfo("VCommunityAdapter-vSphere collection complete: " + clusters
+                + " clusters, " + hosts + " hosts, " + vmResult.stitched
+                + " VMs");
+    }
+
+    private String summarizeConfig() {
+        Map<String, String> status = configStore.lastStatus();
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> e : status.entrySet()) {
+            if (!first) sb.append("; ");
+            sb.append(e.getValue());
+            first = false;
+        }
+        return sb.length() == 0 ? "no config files fetched" : sb.toString();
+    }
+
+    private interface Action { void run() throws Exception; }
+
+    private void safe(Action a, String label) {
+        try {
+            a.run();
+        } catch (Exception e) {
+            logWarn("Stitcher " + label + " failed: " + e.getMessage());
+        }
+    }
+
+    private static void metric(List<MetricData> out, String key, double value,
+            long ts) {
+        out.add(new MetricData(new MetricKey(key), ts, value));
+    }
+
+    private static void prop(List<MetricData> out, String key, String value) {
+        out.add(new MetricData(new MetricKey(true, key),
+                System.currentTimeMillis(), value != null ? value : ""));
+    }
+
+    // =====================================================================
+    // onDiscard
+    // =====================================================================
+
+    @Override
+    public void onDiscard() {
+        if (vsphere != null) vsphere.disconnect();
+        if (suiteStitcher != null) suiteStitcher.discard();
+        super.onDiscard();
+    }
+}
