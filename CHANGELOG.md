@@ -1,5 +1,37 @@
 # Changelog
 
+## build-2 — fix Accounts UI raw-key localization (2026-06-24)
+
+`fix(adapter): drop non-standard <int>.description bundle keys so describe nameKeys resolve`
+
+The Accounts / adapter-config UI rendered raw describe keys instead of friendly
+labels — the solution name showed as `vcfcf_vcommunity_vsphere` and connection
+params as `host`, `port`, `allowInsecure`, the four config-file keys, etc.
+(investigation `context/investigations/vcommunity-vsphere-localization-2026-06-24.md`).
+Root cause (prime suspect): `resources/resources.properties` carried seven
+non-standard `<int>.description=` help-text keys (nameKeys 6/8/9/10/11/14/15)
+that no describe.xml attribute referenced and that no known-good control pak
+(compliance/synology/unifi) uses — suspected of triggering whole-bundle
+rejection by the describe/Dictionary loader, so every nameKey (incl. 1/5, the
+names) fell back to its raw key string.
+
+**Fix:** removed all seven `<int>.description=` keys, leaving only the standard
+`<int>=label` shape the control paks use. `describe.xml` was already free of any
+`descriptionKey`/`<Description>` reference to these keys, so it is untouched and
+fully consistent. The field (i) tooltips were **dropped, not re-expressed**: the
+describe XSD (`describeSchema.xsd`) allows only an `<enum>` child on
+`ResourceIdentifier`/`CredentialField` — there is NO schema-valid `<Description>`
+element or `descriptionKey` attribute for connection params (the spec's
+`<Description nameKey>` is exclusive to `<Recommendation>`). Re-adding the help
+text would itself be schema-invalid and risk the same bundle problem, so the
+tooltips are parked pending a proper, schema-sanctioned mechanism.
+
+**Confirmation status:** the bundle-rejection mechanism is the prime suspect but
+is NOT statically proven — both "reject whole bundle" and "ignore the dotted
+keys" are consistent with a structurally valid `.properties` file. Final
+confirmation is install-on-devel + verifying labels resolve in the Accounts UI,
+which happens after `sdk-adapter-reviewer` and before any install.
+
 ## build-1 — fork of unified vcommunity → vcommunity-vsphere (2026-06-23)
 
 `feat(adapter): fork the unified vCommunity adapter into the vcommunity-vsphere pak`
