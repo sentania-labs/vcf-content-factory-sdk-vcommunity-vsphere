@@ -1,5 +1,59 @@
 # Changelog
 
+## build-5 — port `ESXi Host License Expiring` alert, version-aware (2026-07-09)
+
+`feat(adapter): port ESXi Host License Expiring alert (instanced, version-aware, 8.x/9.x correct)`
+
+Closes the HIGH-ranked gap from the vSphere parity review
+(`knowledge/context/reviews/vcommunity-vsphere-parity-vs-source.md`): the
+source pak's `ESXi Host License Expiring` alert was entirely absent, despite
+`HostCollector` already emitting the `vCommunity|Licensing:{name}|Remaining
+Days` metric it depends on.
+
+Adds 4 symptoms (`symptoms/esxi-host-license-remaining-days-{critical,
+immediate,warning,info}.yaml`) and 1 alert
+(`alerts/esxi-host-license-expiring.yaml`):
+
+- **Not a straight copy.** The source hardcodes a single 8.x SKU name
+  (`vCommunity|Licensing:vSphere 8 Enterprise Plus for VCF|Remaining Days`)
+  that matches nothing on a 9.x estate (recon-verified — neither license on
+  the labs' actual vCenter matches). Every symptom here is `instanced: true`
+  against `vCommunity|Licensing:Any|Remaining Days` — a colon-syntax group
+  placeholder, the same mechanism the pak's own `ESXi Host NIC Disconnected`
+  symptom uses — so the alert fires against whatever license is actually
+  assigned, on any vSphere/VCF version.
+- **Version-aware by construction.** `HostCollector` emits a Remaining Days
+  metric only when a license has a real expiration date and never pushes a
+  sentinel when it does not (unchanged, pre-existing collector behavior). A
+  vSphere/VCF 8.x perpetual license therefore never produces this metric and
+  this alert structurally cannot fire for it — not "unreadable", correctly
+  absent. 9.x subscription-term licenses carry a real expiry and flow
+  normally. No "license missing" / "no expiry" firing condition was added;
+  no data means no alert.
+- **Threshold values kept, severity tiers rationalized.** The source pairs 7
+  symptoms into 4 AND-bounded day ranges with a non-monotonic severity order
+  (30-60 days = WARNING, 60-90 days = IMMEDIATE — the more urgent window
+  rated less severe than the less urgent one). Kept the 4 threshold values
+  (30/60/90/160 days) verbatim; reassigned severity monotonically with
+  days-remaining (critical<30, immediate<60, warning<90, info<160) using 4
+  independent open (less-than) symptoms under `criticality: SYMPTOM_BASED`
+  (automatic severity = highest-severity symptom currently true). See the
+  full rationale in `alerts/esxi-host-license-expiring.yaml`'s description.
+
+**TOOLSET GAP found, not fixed here** (`sdk-adapter-author` does not edit
+`src/vcfops_*/`): `src/vcfops_alerts/render.py::_add_condition_element` does
+not emit the `instanced` attribute on `<Condition>` for `metric_static` /
+`property` conditions in the content-import `alertdefs`/`symptomdefs` XML
+(the pak-build path) — confirmed against the previously-built
+`dist/vcfcf_sdk_vcommunity_vsphere.1.0.0.2.pak`, whose `ESXi Host NIC
+Disconnected` symptomdef XML lacks `instanced="true"` despite the source
+YAML declaring it and `_condition_to_wire()` (the REST-sync path) correctly
+including it. This silently downgrades every instanced condition — the
+pre-existing NIC symptom AND this build's 4 new license symptoms — to
+exact-string matching in the built pak, which defeats the whole point of
+this port (matching any license name without hardcoding one). Route to
+`tooling` before this alert is install-ready.
+
 ## build-4 — corrected dev-build version convention `99.x` → `0.0.0.x` (2026-06-25)
 
 `fix(framework): correct hand-build version line to 0.0.0.x so dev previews always sort below real releases`

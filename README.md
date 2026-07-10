@@ -106,6 +106,21 @@ matters.
   and symptom-able, never dropped. Real events land in v1.1 once the push path is
   proven. (See the Events section above.)
 
+### BLOCKING for the license alert — not install-ready until fixed
+
+- **`instanced` attribute dropped from content-import XML (TOOLSET GAP #2).**
+  `src/vcfops_alerts/render.py::_add_condition_element` never emits `instanced`
+  on `<Condition>` for `metric_static` / `property` conditions in the
+  `content/alertdefs/` / `content/symptomdefs/` XML the pak build produces —
+  confirmed against a previously-built pak. Both `ESXi Host NIC Disconnected`
+  and the new `ESXi Host License Expiring` symptoms declare `instanced: true`
+  in their YAML (correctly honored by the REST-sync wire path), but the pak's
+  own XML silently loses it, downgrading these conditions to exact-string key
+  matching. The license alert's whole design point — matching any license
+  name without hardcoding one — depends on this attribute surviving into the
+  built pak. Route to `tooling` before building/releasing a pak that includes
+  this alert. See `REFERENCE.md` § TOOLSET GAP #2.
+
 ### EMPIRICAL-VERIFY at install
 
 These behaviours are designed and code-complete but have **not** been verified

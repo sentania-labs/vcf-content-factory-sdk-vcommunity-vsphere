@@ -119,6 +119,48 @@ the `vcommunity-os` pak and are NOT emitted here.
 
 ---
 
+## Alerts / Symptoms (`content/alertdefs/`, `content/symptomdefs/`)
+
+### `ESXi Host NIC Disconnected` (HostSystem)
+
+Property symptom on `vCommunity|Network|Device:vmnic0|Status != "Connected"`,
+`instanced: true` (colon-syntax group placeholder — evaluates against every
+NIC device, not literally `vmnic0`; see TOOLSET GAP #2 below).
+
+### `ESXi Host License Expiring` (HostSystem)
+
+4 symptoms (`ESXi Host License Remaining Days {Critical,Immediate,Warning,
+Info}`), each `metric_static` + `instanced: true` against
+`vCommunity|Licensing:Any|Remaining Days` — no license SKU name is
+hardcoded (the source pak hardcodes an 8.x-only name that matches nothing
+on 9.x). Thresholds: critical<30d, immediate<60d, warning<90d, info<160d
+(source's 4 threshold values kept; severity tiers reassigned monotonic —
+see `alerts/esxi-host-license-expiring.yaml` for the full rationale).
+Alert uses `criticality: SYMPTOM_BASED` (automatic severity).
+
+Version-aware by construction: `HostCollector` emits `Remaining Days` only
+when a license carries a real expiration date (never a sentinel on a null
+expiration — see the Licensing key family above). vSphere/VCF 8.x
+perpetual licenses therefore never produce this metric and this alert
+cannot fire for them; 9.x subscription-term licenses do. No data means no
+alert — there is no separate "no expiry" firing condition.
+
+## TOOLSET GAP #2 — `instanced` attribute dropped from content-import XML
+
+`src/vcfops_alerts/render.py::_add_condition_element` does not emit the
+`instanced` attribute on `<Condition>` for `metric_static` / `property`
+conditions when rendering `content/alertdefs/` / `content/symptomdefs/`
+XML (the pak-build content-import path) — confirmed against
+`dist/vcfcf_sdk_vcommunity_vsphere.1.0.0.2.pak`'s `ESXi Host NIC
+Disconnected` symptomdef, which lacks `instanced="true"` despite the
+source YAML declaring it, and despite `_condition_to_wire()` (the
+REST-sync path) correctly including it. This silently downgrades every
+instanced symptom in this pak — `ESXi Host NIC Disconnected` and the 4
+new `ESXi Host License Expiring` symptoms — to exact-string key matching
+in the built pak, defeating the point of an instanced condition. Not
+fixed here (`sdk-adapter-author` does not edit `src/vcfops_*/`); route to
+`tooling`.
+
 ## TOOLSET GAP #1 — foreign-resource event push
 
 The original emits host install-date read failures (and, in the os pak, Windows

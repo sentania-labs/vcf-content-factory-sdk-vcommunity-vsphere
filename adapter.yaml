@@ -1,6 +1,6 @@
 name: "VCF Content Factory vCommunity vSphere"
 version: "0.0.0"
-build_number: 4
+build_number: 5
 adapter_kind: "vcfcf_vcommunity_vsphere"
 entry_class: "com.vcfcf.adapters.vcommunity.VCommunityAdapter"
 tier: 2
@@ -8,8 +8,13 @@ released: false
 bundled_content:
   symptoms:
     - symptoms/esxi-host-nic-disconnected.yaml
+    - symptoms/esxi-host-license-remaining-days-critical.yaml
+    - symptoms/esxi-host-license-remaining-days-immediate.yaml
+    - symptoms/esxi-host-license-remaining-days-warning.yaml
+    - symptoms/esxi-host-license-remaining-days-info.yaml
   alerts:
     - alerts/esxi-host-nic-disconnected.yaml
+    - alerts/esxi-host-license-expiring.yaml
   supermetrics:
     - supermetrics/esxi-bad-network-packets.yaml
     - supermetrics/network-speed-degradation.yaml
