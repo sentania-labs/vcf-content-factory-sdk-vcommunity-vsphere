@@ -1,0 +1,19 @@
+id: 189af936-64df-40f2-bf4f-61c23de0fcbe
+name: nfnic VIB Vendor Distribution
+description: ""
+subject:
+  adapter_kind: VMWARE
+  resource_kind: HostSystem
+data_type: distribution
+presentation: pie-chart
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
+columns:
+- attribute: config|Software Packages|nfnic|Vendor
+  display_name: nfnic VIB Vendor
+  is_property: true
+  is_string_attribute: true
+time_window:
+  unit: DAYS
+  count: 7

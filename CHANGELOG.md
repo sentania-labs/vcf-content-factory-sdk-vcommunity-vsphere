@@ -1,5 +1,70 @@
 # Changelog
 
+## build-6 — fix broken licensing view (instanced_group pilot); port 3 missing views (2026-07-10)
+
+`feat(adapter): rewrite ESXi Host License Information vCommunity view with
+instanced_group columns; port Distributed Port Groups, nfnic VIB Vendor
+Distribution, VM Memory Allocation Trend`
+
+Views leg of the vSphere parity closeout
+(`knowledge/context/reviews/vcommunity-vsphere-parity-vs-source.md`).
+
+- **`views/ESXi Host License Information vCommunity.yaml` — fixed.** The
+  shipped view hardcoded `vCommunity|Licensing:Evaluation Mode|...` in every
+  column with no `isInstancedGroup` driver, so it showed nothing for any
+  license other than "Evaluation Mode" — effectively blank on every real
+  estate. Rewritten with the new `instanced_group:` view-column construct
+  (`feat/view-instanced-group-columns`, framework-reviewer APPROVEd): one
+  driver column (`GROUP_vCommunity`) + four member columns (Edition, Key,
+  Expiration Date, Days to Expire). Emitted XML eyeball-diffed against the
+  vendor source — structurally identical modulo framework-wide conventions
+  (localizationKey on Title/Description, owning-adapter SubjectType, control
+  id numbering, pagination size 500) already applied to every other view in
+  this pak. UUID kept identical to the vendor's ViewDef (`810958f4-...`) —
+  rename-safety.
+  - `sample_instance: "Evaluation Mode"` is UNVERIFIED runtime significance
+    (ambiguity #1 flagged in
+    `knowledge/context/wire-formats/view_column_wire_format.md`
+    §Instanced-group columns) — flagged inline in the YAML comment.
+    Orchestrator to arrange a live verify before the reports leg reuses this
+    pattern at scale.
+- **3 of the 4 MED-gap missing views ported** (parity review gap #4):
+  - `views/nfnic VIB Vendor Distribution.yaml` — 1:1 port, source UUID kept.
+  - `views/VM Memory Allocation Trend.yaml` — 1:1 port (trend/line-chart),
+    source UUID kept. Attribute keys (`mem|memory_allocated_on_all_vms`
+    etc.) are native built-in VMWARE-adapter metrics under the `vSphere
+    World` singleton resource kind, not vCommunity super metrics — no new
+    SM authoring needed (parity review's "SM-consuming" label was imprecise
+    for this one; corrected here).
+  - `views/Distributed Port Groups.yaml` — ported from the vendor's "Report:
+    Distributed Port Groups for CSV export" ViewDef (23 plain columns, no
+    instanced_group — source doesn't use `isInstancedGroup` here). Source
+    UUID kept. Dropped the vendor's `sortCriteria` property (2 columns,
+    unsupported by the loader — pre-sort convenience only, does not change
+    which rows/values are returned) and the vendor's per-column
+    `rollUpType`-omission convention on property columns (an existing,
+    unresolved AMBIGUITY already documented in the wire-format doc — every
+    one of this pak's other ~94 property-column views already renders
+    `rollUpType=AVG`/`rollUpCount=1` via the generic (non-instanced) column
+    renderer, so this port matches the established, already-shipped
+    convention rather than one-off-patching a single view).
+- **`VM Network Top Talkers` NOT ported — TOOLSET GAP.** The view's defining
+  behavior is a `SubjectType` metric filter (`net|usage_average > 12`
+  sustained, `filter="[[{...}]]"` JSON attribute on `<SubjectType>`) that
+  restricts the subject set to VMs actually exceeding the threshold — no
+  such filter is expressible in `ViewDef`/`SubjectType` today. Porting the
+  column set without the filter would silently turn "top talkers" into "all
+  VMs' network usage", a materially different (and much larger) view — an
+  unverified semantic downgrade the framework's own hard rules forbid.
+  Reported as TOOLSET GAP, not ported.
+- Localization: view content.properties bundles are generated automatically
+  by `sdk_builder._generate_view_content_properties()` at build time from
+  each view's `id`/columns — no manual localization authoring needed;
+  verified present and populated for all 4 changed/new views in the
+  build-sdk dev preview
+  (`content/reports/<slug>/resources/content.properties`).
+- No `src/vcfops_*/` changes this round.
+
 ## build-5 — port `ESXi Host License Expiring` alert, version-aware (2026-07-09)
 
 `feat(adapter): port ESXi Host License Expiring alert (instanced, version-aware, 8.x/9.x correct)`

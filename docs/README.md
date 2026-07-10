@@ -19,6 +19,6 @@
 ## Quick Reference
 
 - **Adapter kind:** `vcfcf_vcommunity_vsphere`
-- **Version:** 0.0.0.4
+- **Version:** 0.0.0.6
 - **Traversal spec:** (none)
 - **Resource kinds:** 1

@@ -5,16 +5,53 @@ subject:
   adapter_kind: VMWARE
   resource_kind: HostSystem
 columns:
-- attribute: Instance Name
-  display_name: Instance Name
-- attribute: vCommunity|Licensing:Evaluation Mode|Edition Key
-  display_name: Edition
-- attribute: vCommunity|Licensing:Evaluation Mode|License Key
-  display_name: Key
-- attribute: vCommunity|Licensing:Evaluation Mode|License Expiration Date
-  display_name: Expiration Date
-- attribute: vCommunity|Licensing:Evaluation Mode|Remaining Days
-  display_name: Days to Expire
+- display_name: Instance
+  instanced_group:
+    name: GROUP_vCommunity
+    keep_instance_summary: true
+- display_name: Edition
+  is_property: true
+  is_string_attribute: true
+  instanced_group:
+    name: GROUP_vCommunity
+    prefix: vCommunity|Licensing
+    suffix: Edition Key
+    # sample_instance is a representative instance name used only to identify
+    # the prefix+suffix pattern for expansion — VCF Ops fans this out to one
+    # row per license actually present on the host, it is not a filter.
+    # UNVERIFIED (ambiguity #1, knowledge/context/wire-formats/view_column_wire_format.md
+    # §Instanced-group columns): whether the specific sample value has any
+    # runtime significance beyond pattern identification was not confirmed
+    # against a live instance. Both "Evaluation Mode" and "VMware Cloud
+    # Foundation (cores)" were confirmed present via ops-recon on devel;
+    # "Evaluation Mode" chosen to match the vendor source XML byte-for-byte.
+    # Orchestrator: arrange a live verify before the reports leg mass-produces
+    # this pattern.
+    sample_instance: Evaluation Mode
+- display_name: Key
+  is_property: true
+  is_string_attribute: true
+  instanced_group:
+    name: GROUP_vCommunity
+    prefix: vCommunity|Licensing
+    suffix: License Key
+    sample_instance: Evaluation Mode
+- display_name: Expiration Date
+  is_property: true
+  is_string_attribute: true
+  instanced_group:
+    name: GROUP_vCommunity
+    prefix: vCommunity|Licensing
+    suffix: License Expiration Date
+    sample_instance: Evaluation Mode
+- display_name: Days to Expire
+  is_property: false
+  is_string_attribute: false
+  instanced_group:
+    name: GROUP_vCommunity
+    prefix: vCommunity|Licensing
+    suffix: Remaining Days
+    sample_instance: Evaluation Mode
 time_window:
   unit: DAYS
   count: 7
