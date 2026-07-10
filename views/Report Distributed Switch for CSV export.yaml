@@ -1,0 +1,88 @@
+id: da229455-b8ec-440b-a890-48db49fcf57e
+name: 'Report: Distributed Switch for CSV export'
+description: >-
+  A simple table for export as a CSV file. Used in report only, hence it has no formatting. Just like the rest of the report, it is designed for weekly, not daily nor monthly.
+
+  Schedule it to run end of the week, such as Sunday 23:59
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VmwareDistributedVirtualSwitch
+columns:
+- attribute: summary|version
+  display_name: Version
+  is_property: true
+  is_string_attribute: true
+- attribute: supermetric:Number of VM
+  display_name: No of VM
+  is_property: false
+  is_string_attribute: false
+- attribute: supermetric:Number of Port Groups
+  display_name: Port Groups
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_hosts
+  display_name: Hosts
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|max_num_ports
+  display_name: Total Ports
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|used_num_ports
+  display_name: Used Ports
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|num_blocked_ports
+  display_name: Blocked Ports
+  is_property: false
+  is_string_attribute: false
+- attribute: supermetric:Total Network Configuration Issues
+  display_name: Network Configuration Issues
+  is_property: false
+  is_string_attribute: false
+- attribute: supermetric:Total Non-default Settings
+  display_name: Non-default Settings
+  is_property: false
+  is_string_attribute: false
+- attribute: capability|nicTeamingPolicy
+  display_name: NIC Teaming Policy
+  is_property: true
+  is_string_attribute: true
+- attribute: config|health_check_config|health_check_config_teaming
+  display_name: Teaming
+  is_property: true
+  is_string_attribute: true
+- attribute: config|health_check_config|health_check_config_vlan_mtu
+  display_name: VLAN and MTU
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|dvs_uuid
+  display_name: UUID
+  is_property: true
+  is_string_attribute: true
+- attribute: network|port_statistics|tx_bytes
+  display_name: Egress Traffic
+  unit: gbitsps
+  is_property: false
+  is_string_attribute: false
+- attribute: network|port_statistics|rx_bytes
+  display_name: Ingress Traffic
+  unit: gbitsps
+  is_property: false
+  is_string_attribute: false
+- attribute: network|port_statistics|utilization
+  display_name: Total Traffic
+  unit: gbitsps
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|folder
+  display_name: Folder
+  is_property: true
+  is_string_attribute: true
+time_window:
+  unit: DAYS
+  count: 7

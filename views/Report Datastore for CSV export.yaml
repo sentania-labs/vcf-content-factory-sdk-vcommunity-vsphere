@@ -1,0 +1,132 @@
+id: f66bed30-c7fd-4072-8bf8-1b0e4bce1ce7
+name: 'Report: Datastore for CSV export'
+description: >-
+  A simple table for export as a CSV file. Used in report only, hence it has no formatting. Just like the rest of the report, it is designed for weekly, not daily nor monthly.
+
+  Schedule it to run end of the week, such as Sunday 23:59
+subject:
+  adapter_kind: VMWARE
+  resource_kind: Datastore
+columns:
+- attribute: summary|type
+  display_name: Datastore Type
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|isLocal
+  display_name: Is Local?
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|vmfs_version
+  display_name: VMFS version
+  is_property: true
+  is_string_attribute: true
+- attribute: datastore|hostScsiDiskPartition
+  display_name: VMFS Extents
+  is_property: true
+  is_string_attribute: false
+- attribute: summary|maintenanceState
+  display_name: Maintenance
+  is_property: true
+  is_string_attribute: true
+- attribute: datastore|hostcount
+  display_name: Hosts
+  is_property: true
+  is_string_attribute: false
+- attribute: summary|total_number_vms
+  display_name: Total VM
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_clusters
+  display_name: vSphere Clusters
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|path
+  display_name: Directory Path
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|diskCapacity
+  display_name: Capacity
+  unit: tb
+  is_property: true
+  is_string_attribute: false
+- attribute: capacity|usableCapacity
+  display_name: Usable Capacity
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: capacity|consumer_provisioned
+  display_name: Provisioned Space
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: capacity|used_space
+  display_name: Used Space
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: capacity|usedSpacePct
+  display_name: Used Space
+  unit: percent
+  is_property: false
+  is_string_attribute: false
+- attribute: reclaimable|orphaned_disk|diskspace
+  display_name: Orphaned Disk
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|max_vm_disk_latency
+  display_name: Max VM Disk Latency
+  unit: msec
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|number_vm_templates
+  display_name: VM Templates
+  is_property: false
+  is_string_attribute: false
+- attribute: datastore|totalReadLatency_average
+  display_name: Read Latency
+  unit: msec
+  is_property: false
+  is_string_attribute: false
+- attribute: datastore|totalWriteLatency_average
+  display_name: Write Latency
+  unit: msec
+  is_property: false
+  is_string_attribute: false
+- attribute: datastore|numberReadAveraged_average
+  display_name: Reads/secs
+  is_property: false
+  is_string_attribute: false
+- attribute: datastore|numberWriteAveraged_average
+  display_name: Writes/sec
+  is_property: false
+  is_string_attribute: false
+- attribute: datastore|read_average
+  display_name: Read Throughput
+  unit: mbps
+  is_property: false
+  is_string_attribute: false
+- attribute: datastore|write_average
+  display_name: Write Throughput
+  unit: mbps
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|parentDatacenter
+  display_name: Data Center
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|parentVcenter
+  display_name: vCenter
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|tag
+  display_name: vSphere Tags
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|folder
+  display_name: vSphere Folder
+  is_property: true
+  is_string_attribute: true
+time_window:
+  unit: DAYS
+  count: 7

@@ -1,0 +1,125 @@
+id: c5f9d0b8-07e5-488e-b4ec-bece54158bb0
+name: 'Report: vCenter for CSV Export'
+description: >-
+  A simple table for export as a CSV file. Used in report only, hence it has no formatting. Just like the rest of the report, it is designed for weekly, not daily nor monthly.
+
+  Schedule it to run end of the week, such as Sunday 23:59
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VMwareAdapter Instance
+columns:
+- attribute: summary|total_number_clusters
+  display_name: Clusters
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_hosts
+  display_name: ESXi Hosts
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_vms
+  display_name: VMs
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|number_running_vms
+  display_name: Running VM
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|capacity_provisioned
+  display_name: CPU Total Capacity
+  unit: ghz
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|corecount_provisioned
+  display_name: CPU Total Cores
+  unit: 7001
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|vcpus_allocated_on_all_vms
+  display_name: CPU Allocated to All VMs
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|vcpus_allocated_on_all_powered_on_vms
+  display_name: CPU Allocated to Running VMs
+  is_property: false
+  is_string_attribute: false
+- attribute: gpu|numberOfGPUs
+  display_name: GPU
+  is_property: false
+  is_string_attribute: false
+- attribute: mem|host_provisioned
+  display_name: Memory Total Capacity
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: mem|haTotalCapacity_average
+  display_name: Memory Usable Capacity
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: diskspace|total_capacity
+  display_name: Disk Total Capacity
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: disk|commandsAveraged_average
+  display_name: Disk Total IOPS
+  is_property: false
+  is_string_attribute: false
+- attribute: disk|usage_average
+  display_name: Disk Total Throughput
+  unit: mbps
+  is_property: false
+  is_string_attribute: false
+- attribute: net:physical|usage_average
+  display_name: Physical Network Ussage
+  unit: gbitsps
+  is_property: false
+  is_string_attribute: false
+- attribute: net:virtual|usage_average
+  display_name: Virtual Network Usage
+  unit: gbitsps
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|inventoryChange|numCreate_latest
+  display_name: VM Created
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|inventoryChange|numDestroy_latest
+  display_name: VM Deleted
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|inventoryChange|numReconfigure_latest
+  display_name: VM Reconfigure
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|stateChange|numRebootGuest_latest
+  display_name: Guest Reboot
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|stateChange|numPoweroff_latest
+  display_name: VM Power Off
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|stateChange|numReset_latest
+  display_name: VM Reset
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|stateChange|numSuspend_latest
+  display_name: VM Suspend
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|locationChange|numVMotion_latest
+  display_name: vMotion
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|locationChange|numSVMotion_latest
+  display_name: Storage vMotion
+  is_property: false
+  is_string_attribute: false
+time_window:
+  unit: DAYS
+  count: 7

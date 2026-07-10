@@ -1,0 +1,76 @@
+id: fc20d8a6-9f74-4b78-9022-7441c6d877e9
+name: VM Network Top Talkers
+description: >-
+  List of VMs that use the most bandwidth in both 5 minute and 1 day. To help
+  you focus on the VMs that hit the network hard, VMs that are not hitting
+  the network hard is filtered out. The threshold used is 1 MB/s sustained in
+  the last collection cycle.
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+  filter:
+    - - filter_type: metrics
+        metric_key: net|usage_average
+        condition: GREATER_THAN
+        value: 12
+        transform: AVG
+        business_hours: false
+columns:
+- attribute: net|20_sec_peak_usage_average
+  display_name: 20-second Max
+  unit: gbitsps
+  transformation: MAX
+  yellow_bound: 2.5
+  orange_bound: 5
+  red_bound: 10
+  ascending_range: false
+  is_property: false
+  is_string_attribute: false
+- attribute: net|usage_average
+  display_name: 5 minute Max
+  unit: gbitsps
+  transformation: MAX
+  yellow_bound: 1
+  orange_bound: 2
+  red_bound: 5
+  ascending_range: false
+  is_property: false
+  is_string_attribute: false
+- attribute: net|usage_average
+  display_name: 1 hour Max
+  unit: gbitsps
+  transformation: MAX
+  yellow_bound: 0.25
+  orange_bound: 0.5
+  red_bound: 1
+  ascending_range: false
+  is_property: false
+  is_string_attribute: false
+- attribute: net|20_sec_peak_packetsPerSec
+  display_name: 20-second Max PPS
+  unit: auto
+  transformation: MAX
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|config|numEthernetCards
+  display_name: No of NIC
+  transformation: CURRENT
+  yellow_bound: 2
+  orange_bound: 4
+  red_bound: 6
+  ascending_range: false
+  is_property: true
+  is_string_attribute: false
+- attribute: net:4000|ip_address
+  display_name: IP Address
+  transformation: CURRENT
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|parentDatacenter
+  display_name: Datacenter
+  transformation: CURRENT
+  is_property: true
+  is_string_attribute: true
+time_window:
+  unit: WEEKS
+  count: 1

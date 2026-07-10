@@ -1,5 +1,5 @@
-id: 5bf51a21-b981-4823-b8a5-02297aa40be4
-name: 'Report: Virtual Machines for CSV export'
+id: e2ccf269-9772-4d07-a71c-1df10d69285c
+name: 'Report: vSphere Pod for CSV export'
 description: >-
   A simple table for export as a CSV file. Used in report only, hence it has no formatting. Just like the rest of the report, it is designed for weekly, not daily nor monthly.
 
@@ -132,10 +132,6 @@ columns:
   unit: gb
   is_property: false
   is_string_attribute: false
-- attribute: vsan|policy|compliance
-  display_name: Storage Policy Compliance
-  is_property: true
-  is_string_attribute: true
 - attribute: config|numVMDKsOnly
   display_name: VMDK
   is_property: true
@@ -204,10 +200,6 @@ columns:
   unit: day
   is_property: false
   is_string_attribute: false
-- attribute: config|boot_options_efi_secure_boot_enabled
-  display_name: EFI Secure Boot
-  is_property: true
-  is_string_attribute: true
 - attribute: summary|datastore
   display_name: Datastore
   is_property: true

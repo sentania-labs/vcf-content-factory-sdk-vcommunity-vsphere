@@ -1,5 +1,5 @@
-id: 1951d2a9-5816-4017-8aa7-91099096b067
-name: VOA - Virtual Machine CSV Export
+id: 8b19ed05-35a0-42df-ba34-0b92451f9123
+name: VOA - vSphere Data Centers CSV Export
 description: >
   This CSV file is part of VCF Optimization Assessment. It's not a standalone file. Use it together with the other CSV export as each file only covers 1 object.
 
@@ -10,14 +10,14 @@ description: >
   Tailor this large view by removing unnecessary columns.
 subject_types:
 - adapter_kind: VMWARE
-  resource_kind: VirtualMachine
+  resource_kind: Datacenter
   type: descendant
 - adapter_kind: VMWARE
-  resource_kind: VirtualMachine
+  resource_kind: Datacenter
   type: self
 sections:
 - type: View
-  view: 'Report: Virtual Machines for CSV export'
+  view: 'Report: vSphere Data Center for CSV export'
   orientation: Portrait
   colorize: false
 settings:

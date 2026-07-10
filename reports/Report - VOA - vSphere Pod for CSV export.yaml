@@ -1,5 +1,5 @@
-id: 1951d2a9-5816-4017-8aa7-91099096b067
-name: VOA - Virtual Machine CSV Export
+id: 33ffc523-2bd1-4e87-b9df-3fe804544122
+name: VOA - vSphere Pod for CSV Export
 description: >
   This CSV file is part of VCF Optimization Assessment. It's not a standalone file. Use it together with the other CSV export as each file only covers 1 object.
 
@@ -10,6 +10,12 @@ description: >
   Tailor this large view by removing unnecessary columns.
 subject_types:
 - adapter_kind: VMWARE
+  resource_kind: Pod
+  type: descendant
+- adapter_kind: VMWARE
+  resource_kind: Pod
+  type: self
+- adapter_kind: VMWARE
   resource_kind: VirtualMachine
   type: descendant
 - adapter_kind: VMWARE
@@ -17,7 +23,7 @@ subject_types:
   type: self
 sections:
 - type: View
-  view: 'Report: Virtual Machines for CSV export'
+  view: 'Report: vSphere Pod for CSV export'
   orientation: Portrait
   colorize: false
 settings:
