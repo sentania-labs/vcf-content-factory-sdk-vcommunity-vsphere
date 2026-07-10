@@ -12,9 +12,11 @@ subject_types:
 - adapter_kind: VMWARE
   resource_kind: ClusterComputeResource
   type: self
+  filter: '[[{"condition":"EQUALS","metricKey":"configuration|wpConfiguration|wpEnabled","metricValue":{"isStringMetric":true,"value":"true"},"filterType":"properties"}]]'
 - adapter_kind: VMWARE
   resource_kind: ClusterComputeResource
   type: descendant
+  filter: '[[{"condition":"EQUALS","metricKey":"configuration|wpConfiguration|wpEnabled","metricValue":{"isStringMetric":true,"value":"true"},"filterType":"properties"}]]'
 sections:
 - type: View
   view: 'Report: Supervisor Cluster for CSV export'

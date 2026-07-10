@@ -1,5 +1,91 @@
 # Changelog
 
+## build-9 — wrap-up content round: Supervisor Cluster report filter restored (2026-07-10)
+
+`feat(adapter): re-add Supervisor Cluster report-level SubjectType filter now
+that the escaping fix is live; first build entirely on the fixed renderers`
+
+Closeout round of the parity closeout
+(`knowledge/designs/managementpacks/vcommunity-vsphere-parity-closeout.md`).
+Factory PR #48 merged on `main` since build-8 with three renderer fixes:
+(1) `vcfops_reports/render.py`'s `SubjectType.filter` now quote-escapes
+through the same entity map as the view path (`escape(st.filter, {'"':
+"&quot;"})`) — the one-line gap this pak's build-8 CHANGELOG filed as a
+TOOLSET GAP; (2) `vcfops_alerts/render.py` now emits a compound
+`<SymptomSets operator="...">` wrapper under a single `<State>` for
+multi-tier `symptom_sets`, instead of multiple bare `<SymptomSet>` siblings
+that the platform's content importer would collapse to the last one; (3)
+`vcfops_managementpacks/sdk_builder.py` caps every derived view-column
+localizationKey at 64 chars (`_cap_localization_key`, a deterministic
+prefix+SHA1-suffix scheme), with a build-time trip-wire in
+`validate_sdk_project` (`_validate_localization_key_contract` step 5) so an
+over-length key can never ship silently again — the defect class that
+aborted a view's unmarshal *and* the entire colocated `content/reports/`
+batch (views + reports together) on pak install.
+
+**Important: build-8's reported import failures (4 views + all 11 reports)
+were framework-side, not adapter-side.** Both root causes (the report
+filter's missing quote-escaping and the localization-key-length cap) live
+in `src/vcfops_*/`, out of `sdk-adapter-author` scope, and were fixed by
+`tooling` + `framework-reviewer` on `main` before this build started. No
+adapter YAML needed to change for fixes (2) or (3) — they are generic,
+build-time behaviors the existing bundled content simply now benefits from.
+This build is the first built entirely on top of the fixed renderers.
+
+- **Supervisor Cluster report-level filter re-added.** `reports/'Report -
+  VOA - Supervisor Cluster for CSV export.yaml'`'s two `subject_types`
+  entries now carry the vendor's `filter:` JSON verbatim (`configuration|
+  wpConfiguration|wpEnabled EQUALS "true"`, `filterType: properties`) —
+  dropped in build-8 only because the renderer would have emitted invalid
+  XML (unescaped literal `"` inside the attribute value). Extracted and
+  verified in the build-9 pak: `content/reports/'VOA - vSphere Supervisor
+  for CSV export.xml'` carries `filter="[[{&quot;condition&quot;:...}]]"`
+  on both `SubjectType` elements (self + descendant), byte-identical to
+  the vendor's filter JSON, and round-trips clean through
+  `xml.etree.ElementTree.parse()` (no XML well-formedness issue). The
+  view-level filter (`views/'Report Supervisor Cluster for CSV
+  export.yaml'`, landed build-8) is unchanged; this closes the
+  report-level "eligible object" hint gap noted in build-8.
+- **`ESXi Host License Expiring` alert re-verified against the fixed
+  renderer.** No symptom/alert YAML content changed (the 4 symptoms +ANY
+  criticality wiring were already correct); re-extracted the build-9 pak
+  and confirmed `content/alertdefs/'ESXi Host License Expiring.xml'` now
+  renders ONE `<State severity="automatic">` containing a single
+  `<SymptomSets operator="or">` wrapper with all four tiers'
+  `<SymptomSet ref=.../>` children — where build-8 and earlier would have
+  produced 4 bare `<SymptomSet>` siblings under `<State>`, of which the
+  platform's importer keeps only the last (Immediate/Warning/Critical
+  tiers silently dropped, Info the only one surviving). Updated the
+  alert's own description text to record this (the alert-modeling choice
+  — 4 independent open symptoms vs. the source's AND-paired bounded
+  ranges — is now motivated purely by the monotonic-severity rationale,
+  not by any remaining rendering limitation).
+- **Localization-key cap: verified generically effective, no per-view
+  edits needed.** Re-scanned every bundled view's rendered
+  `content.properties` (via the extracted build-9 pak,
+  `content/reports/*/resources/content.properties`) for suffix length: max
+  observed is exactly 64 chars (the cap boundary), zero entries over 64,
+  across all ~95 views including the 4 that failed import in build-8 (the
+  ones with 65+ char attribute-derived suffixes — e.g. `vSphere Port Group
+  Configuration`, `vSphere Pod` / `Virtual Machines` CSV-export views'
+  `virtualDiskAggregate_of_all_instances_...` columns, `Distributed Port
+  Groups`). Confirms the framework-side fix, not an adapter change,
+  resolves the import failure.
+- **All 11 CSV-export report XMLs re-confirmed present** in the build-9
+  extracted pak (`content/reports/VOA - *.xml`, unchanged set from
+  build-8 except the Supervisor Cluster filter restoration above).
+- No collector Java, symptom, or view changes this build beyond the one
+  YAML edit (Supervisor Cluster report filter) and the alert description
+  text update.
+- `validate-sdk`: clean (includes the new localization-key-length guard).
+  `build-sdk`: clean (`vcfcf_sdk_vcommunity_vsphere.0.0.0.9.pak`).
+  `pak-compare` vs `dist/vcfcf_sdk_compliance.1.0.0.49.pak` (closest
+  available reference, unchanged from build-8): **0 BLOCKING / 1 WARNING
+  (adapter-instance-identifier count, expected — unrelated adapter) / 323
+  INFO** (all expected inventory/manifest deltas between two unrelated
+  paks) — identical score to build-8, confirming the framework fixes
+  changed content correctness, not pak-compare-visible structure.
+
 ## build-8 — 11 CSV-export VOA reports + VM Network Top Talkers (2026-07-10)
 
 `feat(adapter): port 11 CSV-export VOA reports (Datastore, Distributed Port

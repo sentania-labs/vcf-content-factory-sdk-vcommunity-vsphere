@@ -35,14 +35,19 @@ description: >
   warning < 90, info < 160 — using 4 independent open (less-than)
   symptoms instead of the source's AND-paired bounded ranges, evaluated
   under `criticality: SYMPTOM_BASED` (automatic severity = the highest
-  severity among the symptoms currently true). This is also a rendering
-  necessity: the Tier-2 alert content-import XML renderer
-  (`src/vcfops_alerts/render.py::_render_alert_definition`) flattens
-  every symptom_sets entry to independent single-symptom `<SymptomSet>`
-  siblings under `<State>` — it does not emit a compound `<SymptomSets>`
-  wrapper with multi-symptom AND'd `<SymptomSet>` children, so the
-  source's AND-of-two-bounds pattern is not representable through this
-  pipeline as it stands today.
+  severity among the symptoms currently true). This choice is kept as
+  of build-9 even though the underlying rendering gap that originally
+  forced it (factory PR #48, merged 2026-07-09) is now fixed: the
+  Tier-2 alert content-import XML renderer
+  (`src/vcfops_alerts/render.py::_render_alert_definition`) now emits a
+  single `<State>` with a compound `<SymptomSets operator="or">`
+  wrapper containing all four tiers' `<SymptomSet>` children (verified
+  in the build-9 extracted pak), where build-8 and earlier would have
+  produced multiple bare `<SymptomSet>` siblings and silently lost all
+  but the last on import. The 4-independent-symptoms modeling (as
+  opposed to the source's AND-paired bounded ranges) is retained on its
+  own merits — monotonic severity ordering, §above — not because of any
+  remaining rendering limitation.
 adapter_kind: VMWARE
 resource_kind: HostSystem
 type: 15
