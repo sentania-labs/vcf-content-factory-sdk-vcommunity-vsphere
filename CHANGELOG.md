@@ -1,5 +1,96 @@
 # Changelog
 
+## build-7 — VOA reports capability check: TOOLSET GAP found, pilot blocked (2026-07-10)
+
+`fix(framework): report bundled_content.reports view/dashboard cross-reference
+wiring gap in sdk_builder.py — blocks all 16 VOA report ports`
+
+Reports leg of the vSphere parity closeout
+(`knowledge/context/reviews/vcommunity-vsphere-parity-vs-source.md`,
+`knowledge/designs/managementpacks/vcommunity-vsphere-parity-closeout.md`).
+
+- **Capability check: partial pass.** `content/reports/` DOES support real
+  `ReportDef` XML — confirmed by reading `sdk_builder.py` (flat-file pattern
+  at `content/reports/<safe_name>.xml`, one `<Content><Reports><ReportDef>`
+  document per file, distinct from the existing subdirectory `content.xml`
+  pattern used for bundled views) and `src/vcfops_reports/` (`loader.py` +
+  `render.py`, already wired into `_load_bundled_content()`). The vendor's 16
+  `Report - VOA - *.xml` files are genuine `ReportDef` documents (not views
+  mis-filed under `reports/`); `sdk_builder.py`'s header comment even
+  cites this exact adapter's future file names as the intended target.
+- **TOOLSET GAP (blocking, filed against `sdk_builder.py`):**
+  `_load_bundled_content()` calls `vcfops_reports.loader.load_file(path,
+  enforce_framework_prefix=False)` with **no `views_dir` / `dashboards_dir`
+  arguments**, so it falls back to the loader's defaults
+  (`content/views`, `content/dashboards` relative to CWD). Every Tier 2
+  adapter in this repo (including this one) ships bundled views/dashboards
+  at `<adapter>/views/` and `<adapter>/dashboards/` — the sdk-adapter
+  convention, not the Tier 1 `content/views` layout the loader defaults
+  assume. Result: **any report `View` or `Dashboard` section always fails
+  to resolve**, regardless of how correctly the report/view YAML is
+  authored. Reproduced live: authored a pilot view
+  (`views/Report Virtual Machines for CSV export.yaml`, ported verbatim from
+  the vendor's embedded `ViewDef 5bf51a21-...` in
+  `Report - VOA - Virtual Machines for CSV export.xml`) and a pilot report
+  (`reports/Report - VOA - Virtual Machines for CSV export.yaml`,
+  `View` section naming that exact view), wired both into
+  `bundled_content` in `adapter.yaml`, and ran `validate-sdk`:
+  ```
+  bundled_content.reports: failed to load .../reports/Report - VOA -
+  Virtual Machines for CSV export.yaml: Report: Virtual Machines for CSV
+  export: View section 'Report: Virtual Machines for CSV export' could
+  not be resolved — ensure the view exists in views/
+  ```
+  The view file is real, on disk, correctly named — the loader simply never
+  looked in the right directory. The one-line fix
+  (`_load_report(path, views_dir=project_dir / "views", dashboards_dir=
+  project_dir / "dashboards", enforce_framework_prefix=False)`) is
+  `src/vcfops_managementpacks/sdk_builder.py`, out of `sdk-adapter-author`
+  scope (RULE-002) — routed to `tooling`.
+- **STOPPED per brief instructions** ("If it cannot, STOP after the check
+  ... do not attempt workarounds"). Did not mass-port. Did not run
+  `build-sdk` (the cheap-loop `validate-sdk` failure is the gate; a pak
+  build would only reproduce the same failure). Reverted the pilot's
+  `bundled_content` wiring in `adapter.yaml` so `validate-sdk` is clean
+  again; **left the pilot view and report YAML files on disk,
+  unregistered**, as ready-to-activate evidence for the re-attempt once
+  `tooling` lands the fix:
+  - `views/Report Virtual Machines for CSV export.yaml`
+  - `reports/Report - VOA - Virtual Machines for CSV export.yaml`
+- **Deferred: all 16 `Report - VOA - *` reports + the "Input dashboards"
+  template.** Enumerated from
+  `reference/references/vmbro_vcf_operations_vcommunity/Management
+  Pack/content/reports/`:
+  - **11 CSV-export reports** (`Datastore`, `Distributed Port Groups`,
+    `Distributed Switch`, `ESXi Hosts`, `Namespace`, `Supervisor Cluster`,
+    `Virtual Machines`, `vCenter`, `vSphere Clusters`, `vSphere Data
+    Center`, `vSphere Pod`) — each ships ONE bespoke single-purpose `View`
+    section embedded in the same vendor XML file as its `ReportDef` (no
+    Dashboard composition). Mechanical once the wiring gap is fixed; all
+    referenced attribute keys are builtin `VMWARE` properties, not
+    `vCommunity|`-namespaced, so no collector dependency. Blocked solely by
+    the TOOLSET GAP above.
+  - **5 PDF "VOA" reports** (`Capacity`, `Configuration`, `Executive
+    Summary`, `Inventory`, `Performance`) — each is composed entirely of
+    `Dashboard` sections (34 distinct `ContentKey` UUIDs across the five,
+    zero overlap) pointing at the vendor's hidden `Input dashboards.json`
+    template (`content/dashboards/To be used in reports/`), 34 dashboards
+    of 2–8 widgets each. Even after the wiring gap is fixed, porting these
+    is dashboard-author-scope work (34 full dashboard authorings, each
+    cross-referencing its own widget set — many overlapping vSphere views,
+    some possibly touching the guest-OS surface allocated to
+    `vcommunity-os`) — out of scope for a single Tier 2 adapter build.
+    Recommend a dedicated follow-up brief (`dashboard-author` +
+    `report-author` pattern, scoped as its own design) once the wiring gap
+    is fixed and the CSV-export 11 are landed.
+  - The "Input dashboards" template dashboard itself is NOT portable as a
+    single artifact — the vendor JSON is 34 independent `hidden: true`
+    dashboards bundled in one file for report-authoring convenience, not
+    one dashboard. Deferred with the 5 PDF reports above.
+- No change to collector Java, symptoms, alerts, or the 95 already-ported
+  views in this build. `validate-sdk` and `build-sdk` are unaffected —
+  confirmed clean after reverting the pilot's `bundled_content` entries.
+
 ## build-6 — fix broken licensing view (instanced_group pilot); port 3 missing views (2026-07-10)
 
 `feat(adapter): rewrite ESXi Host License Information vCommunity view with

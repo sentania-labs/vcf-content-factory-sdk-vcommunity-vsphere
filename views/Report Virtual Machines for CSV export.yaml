@@ -1,0 +1,79 @@
+id: ef3e6901-4c10-4208-9b95-4c82bf54f810
+name: 'Report: Virtual Machines for CSV export'
+description: >
+  A simple table for export as a CSV file. Used in report only, hence it has
+  no formatting. Just like the rest of the report, it is designed for weekly,
+  not daily nor monthly. Schedule it to run end of the week, such as Sunday
+  23:59.
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+columns:
+- attribute: summary|guest|hostName
+  display_name: Hostname
+- attribute: summary|guest|ipAddress
+  display_name: IP Address
+- attribute: config|createDate
+  display_name: Creation Date
+- attribute: config|version
+  display_name: HW Version
+- attribute: summary|guest|fullName
+  display_name: Guest OS from Tools
+- attribute: config|guestFullName
+  display_name: Guest OS from vCenter
+- attribute: summary|running
+  display_name: 'Running?'
+- attribute: summary|guest|toolsRunningStatus
+  display_name: Tools Running
+- attribute: summary|guest|toolsVersion
+  display_name: Tools Version
+- attribute: summary|guest|toolsVersionStatus2
+  display_name: Tools Version Status
+- attribute: config|hardware|numCpu
+  display_name: CPU
+- attribute: cpu|vm_capacity_provisioned
+  display_name: CPU Capacity
+  unit: ghz
+- attribute: config|cpuAllocation|reservation
+  display_name: CPU Reservation
+  unit: ghz
+- attribute: config|cpuAllocation|limit
+  display_name: CPU Limit
+  unit: ghz
+- attribute: config|extraConfig|vcpu_hotadd
+  display_name: CPU Hot Add
+- attribute: config|extraConfig|vcpu_hotremove
+  display_name: CPU Hot Remove
+- attribute: config|hardware|memoryKB
+  display_name: Memory Capacity
+  unit: gb
+- attribute: config|memoryAllocation|limit
+  display_name: Memory Limit
+  unit: gb
+- attribute: config|memoryAllocation|reservation
+  display_name: Memory Reservation
+  unit: gb
+- attribute: config|extraConfig|mem_hotadd
+  display_name: Memory Hot Add
+- attribute: vsan|policy|compliance
+  display_name: Storage Policy Compliance
+- attribute: config|numVMDKsOnly
+  display_name: VMDK
+- attribute: config|numRDMs
+  display_name: RDM
+- attribute: config|hardware|diskSpace
+  display_name: Disk Space
+  unit: gb
+- attribute: summary|datastore
+  display_name: Datastore
+- attribute: summary|tag
+  display_name: vSphere Tag
+- attribute: summary|folder
+  display_name: Folder
+- attribute: summary|parentCluster
+  display_name: Parent Cluster
+- attribute: summary|parentDatacenter
+  display_name: Parent Datacenter
+time_window:
+  unit: DAYS
+  count: 7
