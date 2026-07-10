@@ -1,5 +1,41 @@
 # Changelog
 
+## build-4 — corrected dev-build version convention `99.x` → `0.0.0.x` (2026-06-25)
+
+`fix(framework): correct hand-build version line to 0.0.0.x so dev previews always sort below real releases`
+
+Hand-built **dev preview** rebuild — version `0.0.0.4`. No adapter source changed.
+
+The prior build-3 marked dev/hand builds with major version `99` (`99.0.0.x`).
+That convention is **wrong and dangerous**: a `99.x` pak makes a future real
+`1.0.0.x` release look like a *downgrade*, so VCF Ops refuses the upgrade.
+Corrected convention: dev/hand builds carry major.minor.patch = `0.0.0` and only
+advance the 4th field (build_number), so they always sort **below** any real
+release. This build is therefore `0.0.0.4` (was erroneously `99.0.0.3`).
+
+Re-bundles the localization-fixed framework base jar `vcfcf-adapter-base.jar`
+(sha256 `4eabad523a30ed547b5aa8987b26d1517dc9d7c89c87a6217ac642ebb3734c53`)
+carrying the `onDescribe()` localization fix (`AdapterDescribe.make(String)` swap).
+
+## build-3 — dev preview build on localization-fixed base jar (2026-06-25)
+
+`fix(framework): rebuild vcommunity-vsphere pak to bundle the onDescribe()-localization-fixed base jar`
+
+Hand-built **dev preview** rebuild — version `99.0.0.3`. The `99.x` major is the
+local hand-built marker that keeps these visually distinct from CI/release builds
+(which stay on the `1.0.0.x` line); only the 4th field (build_number) advances.
+
+No adapter source changed. This rebuild re-bundles the freshly rebuilt framework
+base jar `vcfcf-adapter-base.jar` (sha256 `4eabad523a30ed547b5aa8987b26d1517dc9d7c89c87a6217ac642ebb3734c53`,
+60252 bytes, Jun 24 18:28) carrying the `onDescribe()` localization fix
+(`AdapterDescribe.make(String)` swap). Every SDK pak bundles this jar, so a rebuild
+is the only way to ship the fix into the pak.
+
+Note: the prior `1.0.0.2` pak on disk already bundled this same fixed jar; the
+genuinely-old pre-fix base jar (sha256 `0e873aec…`, 60414 bytes, Jun 10) was last
+bundled in `1.0.0.1`. This build is verified to bundle `4eabad52…` and to differ
+from the `0e873aec…` pre-fix jar.
+
 ## build-2 — fix Accounts UI raw-key localization (2026-06-24)
 
 `fix(adapter): drop non-standard <int>.description bundle keys so describe nameKeys resolve`
