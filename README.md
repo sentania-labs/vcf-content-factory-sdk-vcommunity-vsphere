@@ -35,6 +35,22 @@ metrics (clusters/hosts/VMs stitched, config-file status).
 See [`REFERENCE.md`](REFERENCE.md) for the full key catalog and
 [`docs/`](docs/README.md) for the inventory-tree docset.
 
+### Bundled content
+
+- **109 views** (`content/views/`) — most back the reports below;
+  standalone highlights are `VM Network Top Talkers`, `nfnic VIB Vendor
+  Distribution`, `VM Memory Allocation Trend`, and `Distributed Port
+  Groups`. Full list in [`REFERENCE.md`](REFERENCE.md#bundled-views-contentviews-109-total).
+- **11 CSV-export "VOA" reports** (`content/reports/`) — one table per
+  resource kind (Datastores, Hosts, VMs, vCenter, Clusters, Data Centers,
+  Namespaces, Supervisor, Pods, Distributed Switch, Distributed Port
+  Groups), designed to be run together and combined in a spreadsheet. Full
+  list in [`REFERENCE.md`](REFERENCE.md#bundled-reports-contentreports-11-total).
+- **Deferred, out of scope for this pak:** the vendor's 5 PDF "VOA"
+  reports and the 34-dashboard "Input dashboards" template
+  (`dashboard-author`-scope follow-up); the Windows/in-guest-surface
+  views belong to the `vcommunity-os` pak.
+
 ## Relationship to the unified pak (fresh-lineage fork)
 
 This is a **distinct adapter kind** (`vcfcf_vcommunity_vsphere`), forked from the
@@ -106,20 +122,20 @@ matters.
   and symptom-able, never dropped. Real events land in v1.1 once the push path is
   proven. (See the Events section above.)
 
-### BLOCKING for the license alert — not install-ready until fixed
+### RESOLVED — `instanced` attribute (DEF-008, closed)
 
-- **`instanced` attribute dropped from content-import XML (TOOLSET GAP #2).**
-  `src/vcfops_alerts/render.py::_add_condition_element` never emits `instanced`
-  on `<Condition>` for `metric_static` / `property` conditions in the
-  `content/alertdefs/` / `content/symptomdefs/` XML the pak build produces —
-  confirmed against a previously-built pak. Both `ESXi Host NIC Disconnected`
-  and the new `ESXi Host License Expiring` symptoms declare `instanced: true`
-  in their YAML (correctly honored by the REST-sync wire path), but the pak's
-  own XML silently loses it, downgrading these conditions to exact-string key
-  matching. The license alert's whole design point — matching any license
-  name without hardcoding one — depends on this attribute surviving into the
-  built pak. Route to `tooling` before building/releasing a pak that includes
-  this alert. See `REFERENCE.md` § TOOLSET GAP #2.
+Historical note. Against the `1.0.0.2` pak,
+`src/vcfops_alerts/render.py::_add_condition_element` did not emit `instanced`
+on `<Condition>` for `metric_static` / `property` conditions in the
+`content/alertdefs/` / `content/symptomdefs/` XML the pak build produces —
+the REST-sync wire path already carried it correctly. This would have
+downgraded `ESXi Host NIC Disconnected` and the `ESXi Host License Expiring`
+symptoms to exact-string key matching, defeating the license alert's design
+point (matching any license name without hardcoding one). Root-caused as
+factory defect DEF-008 and fixed in factory PR #46 (`sdk-buildkit` 1.0.7+).
+As of build 10, the extracted pak's symptomdefs all carry `instanced="true"`
+with correct `thresholdType`/`valueType`. See `REFERENCE.md` §
+"RESOLVED — `instanced` attribute" and `knowledge/context/defects.md` DEF-008.
 
 ### EMPIRICAL-VERIFY at install
 

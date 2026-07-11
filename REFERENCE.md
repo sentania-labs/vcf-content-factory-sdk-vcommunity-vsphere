@@ -125,7 +125,8 @@ the `vcommunity-os` pak and are NOT emitted here.
 
 Property symptom on `vCommunity|Network|Device:vmnic0|Status != "Connected"`,
 `instanced: true` (colon-syntax group placeholder — evaluates against every
-NIC device, not literally `vmnic0`; see TOOLSET GAP #2 below).
+NIC device, not literally `vmnic0`; the built pak carries `instanced="true"`
+— see RESOLVED note below).
 
 ### `ESXi Host License Expiring` (HostSystem)
 
@@ -145,21 +146,69 @@ perpetual licenses therefore never produce this metric and this alert
 cannot fire for them; 9.x subscription-term licenses do. No data means no
 alert — there is no separate "no expiry" firing condition.
 
-## TOOLSET GAP #2 — `instanced` attribute dropped from content-import XML
+## RESOLVED — `instanced` attribute (DEF-008, closed)
 
-`src/vcfops_alerts/render.py::_add_condition_element` does not emit the
+Historical note, not a current gap. Against the `1.0.0.2` pak,
+`src/vcfops_alerts/render.py::_add_condition_element` did not emit the
 `instanced` attribute on `<Condition>` for `metric_static` / `property`
 conditions when rendering `content/alertdefs/` / `content/symptomdefs/`
-XML (the pak-build content-import path) — confirmed against
-`dist/vcfcf_sdk_vcommunity_vsphere.1.0.0.2.pak`'s `ESXi Host NIC
-Disconnected` symptomdef, which lacks `instanced="true"` despite the
-source YAML declaring it, and despite `_condition_to_wire()` (the
-REST-sync path) correctly including it. This silently downgrades every
-instanced symptom in this pak — `ESXi Host NIC Disconnected` and the 4
-new `ESXi Host License Expiring` symptoms — to exact-string key matching
-in the built pak, defeating the point of an instanced condition. Not
-fixed here (`sdk-adapter-author` does not edit `src/vcfops_*/`); route to
-`tooling`.
+XML (the pak-build content-import path) — the REST-sync wire path
+(`_condition_to_wire()`) already carried it correctly, so the drop was
+build-path-specific. This would have downgraded `ESXi Host NIC
+Disconnected` and the 4 `ESXi Host License Expiring` symptoms to
+exact-string key matching in the built pak, defeating the point of an
+instanced condition. Root-caused as factory defect DEF-008 and fixed in
+factory PR #46 (`sdk-buildkit` 1.0.7+). As of this build (10), the
+extracted pak's symptomdefs all carry `instanced="true"` with the
+correct `thresholdType`/`valueType` — confirmed for `ESXi Host NIC
+Disconnected` (`valueType="string"`) and all four `ESXi Host License
+Remaining Days *` symptoms (`valueType="numeric"`). See
+`knowledge/context/defects.md` DEF-008.
+
+---
+
+## Bundled views (`content/views/`, 109 total)
+
+Most are 1:1 ports/co-bundles for the reports below. Four notable
+standalone additions from the parity closeout
+(`knowledge/designs/managementpacks/vcommunity-vsphere-parity-closeout.md`):
+
+| View | Subject | Notes |
+|---|---|---|
+| `VM Network Top Talkers` | VirtualMachine | filters to VMs sustaining >1 MB/s (`net\|usage_average GREATER_THAN 12`, `transform: AVG`) over the last collection cycle; byte-exact vendor filter port |
+| `nfnic VIB Vendor Distribution` | HostSystem | pie-chart distribution over `config\|Software Packages\|nfnic\|Vendor` |
+| `VM Memory Allocation Trend` | vSphere World | trend line, total vs. powered-on VM memory allocation |
+| `Distributed Port Groups` | DistributedVirtualPortgroup | CSV-export view backing the report of the same name below |
+
+**Deferred, out of scope for this pak:** the vendor's `Windows Services
+vCommunity` view and other in-guest/Windows-surface views — those belong
+to the `vcommunity-os` pak (design OPEN-B1).
+
+## Bundled reports (`content/reports/`, 11 total)
+
+11 CSV-export "VOA" (VCF Optimization Assessment) reports, ported with
+vendor UUIDs kept on both `ReportDef` and its co-bundled `ViewDef`. Each
+is a standalone CSV-export table over one resource kind, designed to be
+run together and combined in a spreadsheet — not a single consolidated
+report:
+
+- VOA - Datastores for CSV Export
+- VOA - Distributed Port Groups for CSV Export
+- VOA - Distributed Switch for CSV Export
+- VOA - ESXi Hosts CSV Export
+- VOA - vSphere Namespace for CSV Export
+- VOA - vSphere Supervisor for CSV export
+- VOA - Virtual Machine CSV Export
+- VOA - vCenter for CSV Export
+- VOA - vSphere Clusters CSV Export
+- VOA - vSphere Data Centers CSV Export
+- VOA - vSphere Pod for CSV Export
+
+**Deferred, out of scope for this pak** (`content/sdk-adapters/vcommunity-vsphere/CHANGELOG.md`
+build-8, "Still deferred"): the vendor's 5 PDF "VOA" reports (`Capacity`,
+`Configuration`, `Executive Summary`, `Inventory`, `Performance`) and the
+34-dashboard "Input dashboards" template — `dashboard-author`-scope work,
+recommended as a dedicated follow-up.
 
 ## TOOLSET GAP #1 — foreign-resource event push
 

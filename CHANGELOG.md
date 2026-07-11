@@ -1,5 +1,37 @@
 # Changelog
 
+## docs — build-10 doc fix round, no build bump (2026-07-11)
+
+`docs(adapter): clear sdk-adapter-reviewer BLOCKING-2/WARNING from
+knowledge/context/reviews/vcommunity-vsphere-build-10.md`
+
+Doc-only round on top of build-10; no adapter content, Java, or pak
+artifact changed, so `build_number` is not bumped.
+
+- **BLOCKING-2 cleared.** `REFERENCE.md`'s "TOOLSET GAP #2 — `instanced`
+  attribute dropped" section claimed the instanced attribute is still
+  dropped from built symptomdefs and that the NIC + 4 license symptoms
+  downgrade to exact-string matching — false as of build 10 (DEF-008
+  closed; all five symptomdefs verified to carry `instanced="true"`) and
+  directly contradicted the correct license-alert section 25 lines above
+  it. Rewrote to a "RESOLVED — `instanced` attribute (DEF-008, closed)"
+  historical note (root cause, factory PR #46 / `sdk-buildkit` 1.0.7+,
+  current-state confirmation). `README.md`'s parallel "BLOCKING for the
+  license alert" section (stale from build 5) rewritten the same way.
+  `TOOLSET GAP #1` (foreign-resource event push) is unchanged — still
+  real per the reviewer.
+- **WARNING cleared.** The 11 VOA CSV-export reports and the 4
+  newly-ported views (`VM Network Top Talkers`, `nfnic VIB Vendor
+  Distribution`, `VM Memory Allocation Trend`, `Distributed Port Groups`)
+  were on no user-facing doc surface. Added a "Bundled views" / "Bundled
+  reports" section to `REFERENCE.md` and a "Bundled content" summary to
+  `README.md`, both noting the deferred-by-design items (5 PDF VOA
+  reports + the 34-dashboard input-dashboards template, and the
+  Windows/in-guest-surface views that belong to `vcommunity-os`).
+- `validate-sdk`: clean (8 source files compile; benign `-source 11`
+  warning). No `content/`, `src/`, `describe.xml`, or `adapter.yaml`
+  change — pak-content is byte-identical to build-10.
+
 ## build-10 — rebuild: first build with importable reports (2026-07-11)
 
 `fix(framework): rebuild on factory PR #49 (reports emit as
