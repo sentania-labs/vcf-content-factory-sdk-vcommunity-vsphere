@@ -1,5 +1,52 @@
 # Changelog
 
+## build-10 — rebuild: first build with importable reports (2026-07-11)
+
+`fix(framework): rebuild on factory PR #49 (reports emit as
+content/reports/<slug>/ subdirs with co-bundled ViewDefs); SM modifiedBy is
+now a valid UUID`
+
+No adapter content changed this round — this is a pure rebuild to pick up
+factory PR #49 on `main`. Two `src/vcfops_managementpacks/sdk_builder.py`
+fixes, both out of `sdk-adapter-author` scope:
+
+1. **Report subdir emission (the fix that actually makes reports
+   importable).** Build-9's 11 report definitions (the `reports:` entries
+   in `adapter.yaml`) were emitted as flat `content/reports/<name>.xml`
+   files, same tier as `content/views/`. The platform's content importer
+   only walks `content/reports/<slug>/` **subdirectories** looking for a
+   `content.xml` — a flat file at that level is silently skipped, never an
+   error. So build-9's 11 reports built clean, passed pak-compare, and
+   would still have failed to import a single one on a real instance. PR
+   #49 changes the builder to emit each report as its own
+   `content/reports/<slug>/content.xml`, with the `ReportDef`'s
+   referenced `ViewDef` co-bundled in the same file (`<Views><ViewDef
+   id="...">...` followed by `<Reports><ReportDef>...<Sections><Section>
+   <ContentKey>` pointing at that same id). Confirmed on this build: 0
+   flat XMLs directly under `content/reports/`, 120 subdirs total (109
+   pre-existing view-only `ViewDef` dirs, unchanged, + 11 new
+   `ReportDef`+co-bundled-`ViewDef` dirs). Spot-checked 2 of the 11
+   (`VOA_-_vSphere_Supervisor_for_CSV_export`,
+   `VOA_-_ESXi_Hosts_CSV_Export`): embedded `ViewDef id` equals the
+   `Section`'s `ContentKey` in both. All 11 checked, all match. The
+   Supervisor Cluster report's `configuration|wpConfiguration|wpEnabled`
+   `SubjectType.filter` (restored build-9) survives the new emission path
+   unchanged — still quote-escaped (`&quot;`) in the rendered XML.
+2. **SM `modifiedBy` is now a valid UUID.** All 37 bundled supermetric
+   JSONs carry `"modifiedBy": "00000000-0000-0000-0000-000000000000"`
+   (all-zero UUID, not a placeholder string) — confirmed across the full
+   set.
+
+The four-tier `ESXi Host License Expiring` alert's single `<SymptomSets
+operator="or">` wrapper (build-9, PR #48) is unaffected and still present
+with all 4 `SymptomSet` children (Critical/Immediate/Warning/Info).
+
+`pak-compare` against `vcfcf_sdk_compliance.1.0.0.49.pak`: 0 BLOCKING, 1
+WARNING (`describe.xml` adapter-instance-identifier count: factory=7 vs
+reference=4 — expected, this adapter's connection form has more fields
+than compliance's), 334 INFO (all attribution-level — different adapter
+kind/name/description/jar contents, expected).
+
 ## build-9 — wrap-up content round: Supervisor Cluster report filter restored (2026-07-10)
 
 `feat(adapter): re-add Supervisor Cluster report-level SubjectType filter now
