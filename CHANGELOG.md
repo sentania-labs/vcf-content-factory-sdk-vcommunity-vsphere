@@ -1,5 +1,28 @@
 # Changelog
 
+## build-11 — rebuild: dashboard self-provider widget binding fixes (2026-07-13)
+
+`fix(framework): rebuild on factory PR #54 (dashboard renderer
+self-provider wire-format fixes)`
+
+No adapter Java, describe.xml, or bundled-content source changed. Rebuild
+picks up corrected dashboard JSON emission from the factory dashboard
+renderer (factory main @ f3e3d5c, PR #54 —
+`knowledge/context/reviews/framework/dashboard-selfprovider-pin.md`):
+
+- Self-provider HealthChart widgets now emit a bound vSphere World
+  resource entry instead of an unbound/empty resource list.
+- Self-provider + pin-to-external-UUID on View widgets is now honored —
+  the widget carries `selfProvider:true` alongside the pinned resource
+  entry, rather than silently dropping the pin.
+- Affects every bundled dashboard with self-provider widgets: `Cluster
+  Performance 2.0`, `ESXi Host Details`, and the rest of the 12 bundled
+  dashboards. Verified by direct inspection of the built pak's
+  `content/dashboards/` JSON (see build-11 sdk-adapter-author report /
+  git log for the exact widget-id spot checks).
+- `validate-sdk`: clean. `build-sdk`: clean. `pak-compare`: 0 BLOCKING
+  against the closest reference pak.
+
 ## docs — build-10 doc fix round, no build bump (2026-07-11)
 
 `docs(adapter): clear sdk-adapter-reviewer BLOCKING-2/WARNING from
