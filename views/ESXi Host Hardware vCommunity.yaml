@@ -8,6 +8,11 @@ data_type: distribution
 columns:
 - attribute: hardware|vendorModel
   display_name: Server Hardware
+  is_property: true
+  is_string_attribute: true
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
 time_window:
   unit: DAYS
   count: 7

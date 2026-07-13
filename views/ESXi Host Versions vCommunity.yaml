@@ -8,6 +8,11 @@ data_type: distribution
 columns:
 - attribute: summary|version
   display_name: ESXi Version
+  is_property: true
+  is_string_attribute: true
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
 time_window:
   unit: DAYS
   count: 7
