@@ -1,0 +1,25 @@
+name: "ESXi Host License Remaining Days Info"
+adapter_kind: VMWARE
+resource_kind: HostSystem
+wait_cycles: 1
+cancel_cycles: 1
+severity: INFO
+description: >
+  Fires when a license assigned to this host has fewer than 160 days
+  remaining before expiration. Source vCommunity pak threshold value
+  (160 days) and INFO tier preserved as-is.
+
+  Instanced against `vCommunity|Licensing:<any license name>|Remaining
+  Days` (colon-syntax group placeholder, `instanced: true` below) — no
+  license SKU name is hardcoded. A license with NO expiration date
+  (vSphere/VCF 8.x perpetual licensing) never produces a Remaining Days
+  metric (never a sentinel), so a perpetually-licensed host structurally
+  cannot fire this symptom. Only 9.x subscription-term licenses are
+  eligible. No data is never treated as expiring.
+
+condition:
+  type: metric_static
+  key: "vCommunity|Licensing:Any|Remaining Days"
+  operator: LT
+  value: 160
+  instanced: true

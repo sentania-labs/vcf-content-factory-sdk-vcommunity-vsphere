@@ -1,0 +1,22 @@
+id: 8f46e7de-d976-45c4-b7ad-b2477cc96da3
+name: VM Memory Allocation Trend
+description: Trend line of VM growth. It shows both the powered on and powered
+  off, to see the relative movement over time
+subject:
+  adapter_kind: VMWARE
+  resource_kind: vSphere World
+data_type: trend
+presentation: line-chart
+columns:
+- attribute: mem|memory_allocated_on_all_vms
+  display_name: Total Allocation
+  unit: tb
+- attribute: mem|memory_allocated_on_all_powered_on_vms
+  display_name: Powered on VM
+  unit: tb
+- attribute: mem|host_usable
+  display_name: Usable Capacity
+  unit: tb
+time_window:
+  unit: MONTHS
+  count: 1

@@ -1,0 +1,225 @@
+id: e2ccf269-9772-4d07-a71c-1df10d69285c
+name: 'Report: vSphere Pod for CSV export'
+description: >-
+  A simple table for export as a CSV file. Used in report only, hence it has no formatting. Just like the rest of the report, it is designed for weekly, not daily nor monthly.
+
+  Schedule it to run end of the week, such as Sunday 23:59
+subject:
+  adapter_kind: VMWARE
+  resource_kind: VirtualMachine
+columns:
+- attribute: summary|guest|hostName
+  display_name: Hostname
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|guest|ipAddress
+  display_name: IP Address
+  is_property: true
+  is_string_attribute: true
+- attribute: config|createDate
+  display_name: Creation Date
+  unit: auto
+  is_property: true
+  is_string_attribute: false
+- attribute: config|version
+  display_name: HW Version
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|guest|fullName
+  display_name: Guest OS from Tools
+  is_property: true
+  is_string_attribute: true
+- attribute: config|guestFullName
+  display_name: Guest OS from vCenter
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|running
+  display_name: Running?
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|guest|toolsRunningStatus
+  display_name: Tools Running
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|guest|toolsVersion
+  display_name: Tools Version
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|guest|toolsVersionStatus2
+  display_name: Tools Version Status
+  is_property: true
+  is_string_attribute: true
+- attribute: config|hardware|numCpu
+  display_name: CPU
+  is_property: true
+  is_string_attribute: false
+- attribute: cpu|vm_capacity_provisioned
+  display_name: CPU Capacity
+  unit: ghz
+  is_property: false
+  is_string_attribute: false
+- attribute: config|cpuAllocation|reservation
+  display_name: CPU Reservation
+  unit: ghz
+  is_property: true
+  is_string_attribute: false
+- attribute: config|cpuAllocation|limit
+  display_name: CPU Limit
+  unit: ghz
+  is_property: true
+  is_string_attribute: false
+- attribute: config|extraConfig|vcpu_hotadd
+  display_name: CPU Hot Add
+  is_property: true
+  is_string_attribute: true
+- attribute: config|extraConfig|vcpu_hotremove
+  display_name: CPU Hot Remove
+  is_property: true
+  is_string_attribute: true
+- attribute: guest|20_sec_peak_contextSwapRate_latest
+  display_name: CPU Context Switch
+  is_property: false
+  is_string_attribute: false
+- attribute: guest|20_sec_peak_cpu_queue
+  display_name: CPU Queue
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|net_run
+  display_name: CPU Run
+  unit: percent
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|vcpu_usage_disparity
+  display_name: CPU Usage Disparity
+  unit: percent
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|20_sec_peak_readyPct
+  display_name: CPU Ready
+  unit: percent
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|20_sec_peak_costopPct
+  display_name: CPU CoStop
+  unit: percent
+  is_property: false
+  is_string_attribute: false
+- attribute: config|hardware|memoryKB
+  display_name: Memory Capacity
+  unit: gb
+  is_property: true
+  is_string_attribute: false
+- attribute: config|memoryAllocation|limit
+  display_name: Memory Limit
+  unit: gb
+  is_property: true
+  is_string_attribute: false
+- attribute: config|memoryAllocation|reservation
+  display_name: Memory Reservation
+  unit: gb
+  is_property: true
+  is_string_attribute: false
+- attribute: config|extraConfig|mem_hotadd
+  display_name: Memory Hot Add
+  is_property: true
+  is_string_attribute: true
+- attribute: guest|20_sec_peak_page.outRate_latest
+  display_name: Memory Paging Rate
+  is_property: false
+  is_string_attribute: false
+- attribute: guest|mem.free_latest
+  display_name: Memory Free
+  unit: gb
+  is_property: false
+  is_string_attribute: false
+- attribute: config|numVMDKsOnly
+  display_name: VMDK
+  is_property: true
+  is_string_attribute: false
+- attribute: config|numRDMs
+  display_name: RDM
+  is_property: true
+  is_string_attribute: false
+- attribute: config|hardware|diskSpace
+  display_name: Disk Space
+  unit: gb
+  is_property: true
+  is_string_attribute: false
+- attribute: guestfilesystem|percentage_total
+  display_name: Filesystem Utilization
+  unit: percent
+  is_property: false
+  is_string_attribute: false
+- attribute: guest|disk_queue
+  display_name: Disk Queue
+  is_property: false
+  is_string_attribute: false
+- attribute: virtualDisk:Aggregate of all instances|numberReadAveraged_average
+  display_name: Reads/sec
+  is_property: false
+  is_string_attribute: false
+- attribute: virtualDisk:Aggregate of all instances|numberWriteAveraged_average
+  display_name: Writes/sec
+  is_property: false
+  is_string_attribute: false
+- attribute: virtualDisk:Aggregate of all instances|totalReadLatency_average
+  display_name: Read Latency
+  unit: msec
+  is_property: false
+  is_string_attribute: false
+- attribute: virtualDisk:Aggregate of all instances|totalWriteLatency_average
+  display_name: Write Latency
+  unit: msec
+  is_property: false
+  is_string_attribute: false
+- attribute: virtualDisk:Aggregate of all instances|usage
+  display_name: Throughput
+  unit: mbps
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|config|numEthernetCards
+  display_name: NIC Count
+  is_property: true
+  is_string_attribute: false
+- attribute: net|20_sec_peak_usage_average
+  display_name: Net Usage
+  unit: gbitsps
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|vmotion|total_successes
+  display_name: vMotion
+  is_property: false
+  is_string_attribute: false
+- attribute: OnlineCapacityAnalytics|capacityRemainingPercentage
+  display_name: Capacity Remaining
+  unit: percent
+  is_property: false
+  is_string_attribute: false
+- attribute: OnlineCapacityAnalytics|timeRemaining
+  display_name: Time Remaining
+  unit: day
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|datastore
+  display_name: Datastore
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|folder
+  display_name: Folder
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|parentCluster
+  display_name: Parent Cluster
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|parentDatacenter
+  display_name: Parent Datacenter
+  is_property: true
+  is_string_attribute: true
+time_window:
+  unit: DAYS
+  count: 7

@@ -1,0 +1,68 @@
+id: 9b448057-cc98-4daa-9d08-6e25213acea8
+name: 'Report: Supervisor Cluster for CSV export'
+description: >-
+  Supervisor Cluster Configuration Summary.
+subject:
+  adapter_kind: VMWARE
+  resource_kind: ClusterComputeResource
+  filter:
+    - - filter_type: properties
+        metric_key: configuration|wpConfiguration|wpEnabled
+        condition: EQUALS
+        value: "true"
+columns:
+- attribute: configuration|wpConfiguration|wpEnabled
+  display_name: WP Enabled
+  is_property: true
+  is_string_attribute: true
+- attribute: configuration|wpConfiguration|currentVersion
+  display_name: WP Version
+  is_property: true
+  is_string_attribute: true
+- attribute: configuration|wpConfiguration|api_server_cluster_endpoint
+  display_name: Ctrl Plane Node IP
+  is_property: true
+  is_string_attribute: true
+- attribute: namespaces|configStatus
+  display_name: Config Status
+  is_property: false
+  is_string_attribute: true
+- attribute: namespaces|kubernetesStatus
+  display_name: Kubernetes Status
+  is_property: false
+  is_string_attribute: true
+- attribute: summary|total_number_hosts
+  display_name: Hosts
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|numberNamespaces
+  display_name: Namespaces
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|numberKubernetesClusters
+  display_name: Tanzu Kubernetes clusters
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_vms
+  display_name: VMs
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_pods
+  display_name: Pods
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|parentDatacenter
+  display_name: Parent DC
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|parentVcenter
+  display_name: Parent VC
+  is_property: true
+  is_string_attribute: true
+time_window:
+  unit: DAYS
+  count: 7

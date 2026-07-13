@@ -1,0 +1,26 @@
+id: 771756d2-9575-40a9-b65b-1364333d9c6c
+name: VOA - Distributed Port Groups for CSV Export
+description: >
+  This CSV file is part of VCF Optimization Assessment. It's not a standalone file. Use it together with the other CSV export as each file only covers 1 object.
+
+  It's designed for further analysis in a spreadsheet.
+
+  To see for the whole environment, run this against vSphere World object. To see specific vCenter or vCenter Data Center, choose the object.
+
+  Tailor this large view by removing unnecessary columns.
+subject_types:
+- adapter_kind: VMWARE
+  resource_kind: DistributedVirtualPortgroup
+  type: descendant
+- adapter_kind: VMWARE
+  resource_kind: DistributedVirtualPortgroup
+  type: self
+sections:
+- type: View
+  view: 'Report: Distributed Port Groups for CSV export'
+  orientation: Portrait
+  colorize: false
+settings:
+  show_page_footer: false
+  output_formats:
+  - csv

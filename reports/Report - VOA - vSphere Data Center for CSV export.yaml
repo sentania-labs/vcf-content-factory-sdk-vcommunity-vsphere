@@ -1,0 +1,26 @@
+id: 8b19ed05-35a0-42df-ba34-0b92451f9123
+name: VOA - vSphere Data Centers CSV Export
+description: >
+  This CSV file is part of VCF Optimization Assessment. It's not a standalone file. Use it together with the other CSV export as each file only covers 1 object.
+
+  It's designed for further analysis in a spreadsheet.
+
+  To see for the whole environment, run this against vSphere World object. To see specific vCenter or vCenter Data Center, choose the object.
+
+  Tailor this large view by removing unnecessary columns.
+subject_types:
+- adapter_kind: VMWARE
+  resource_kind: Datacenter
+  type: descendant
+- adapter_kind: VMWARE
+  resource_kind: Datacenter
+  type: self
+sections:
+- type: View
+  view: 'Report: vSphere Data Center for CSV export'
+  orientation: Portrait
+  colorize: false
+settings:
+  show_page_footer: false
+  output_formats:
+  - csv

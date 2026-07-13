@@ -1,0 +1,78 @@
+name: "ESXi Host License Expiring"
+description: >
+  Warns as an ESXi host's assigned license approaches its expiration
+  date. Ported from the source vCommunity pak's `ESXi Host License
+  Expiring` alert (`alertdefs/ESXi Host License Expiring.xml`), which
+  hardcoded a single 8.x SKU name
+  (`vCommunity|Licensing:vSphere 8 Enterprise Plus for VCF|Remaining
+  Days`) that matches nothing on a 9.x estate. This port drops the
+  hardcoded name: every contributing symptom is `instanced: true`
+  against `vCommunity|Licensing:<any license name>|Remaining Days`, so
+  the alert fires for whatever license is actually assigned, on any
+  vSphere/VCF version.
+
+  Version-aware by construction, not by a special case: the collector
+  (HostCollector.java) emits a Remaining Days metric ONLY when a
+  license carries a real expiration date, and pushes no sentinel when
+  it does not. vSphere/VCF 8.x perpetual licenses have no expiration
+  date, so they produce no Remaining Days metric and this alert
+  structurally never fires for them — a perpetual license is not
+  "unreadable" or "unknown", it is correctly absent from this alert's
+  data. vSphere/VCF 9.x subscription-term licenses
+  (`esx.vcf.entitlement.*`) carry a real expiry and flow normally.
+  There is no separate "license missing" or "no expiry" firing
+  condition — no data means no alert, by design.
+
+  Severity tiering: the source pairs 7 symptoms into 4 AND-bounded day
+  ranges (<30 critical, 30-60 warning, 60-90 immediate, 90-160 info) —
+  note the source's own non-monotonic order (WARNING is less severe
+  than IMMEDIATE, yet the source assigns WARNING to the *lower*
+  30-60-day range and IMMEDIATE to the *higher* 60-90-day range, i.e.
+  the more urgent 30-60-day window is rated less severe than the less
+  urgent 60-90-day window). This port keeps the source's 4 threshold
+  values (30/60/90/160 days) verbatim but reassigns severity
+  monotonically with days-remaining — critical < 30, immediate < 60,
+  warning < 90, info < 160 — using 4 independent open (less-than)
+  symptoms instead of the source's AND-paired bounded ranges, evaluated
+  under `criticality: SYMPTOM_BASED` (automatic severity = the highest
+  severity among the symptoms currently true). This choice is kept as
+  of build-9 even though the underlying rendering gap that originally
+  forced it (factory PR #48, merged 2026-07-09) is now fixed: the
+  Tier-2 alert content-import XML renderer
+  (`src/vcfops_alerts/render.py::_render_alert_definition`) now emits a
+  single `<State>` with a compound `<SymptomSets operator="or">`
+  wrapper containing all four tiers' `<SymptomSet>` children (verified
+  in the build-9 extracted pak), where build-8 and earlier would have
+  produced multiple bare `<SymptomSet>` siblings and silently lost all
+  but the last on import. The 4-independent-symptoms modeling (as
+  opposed to the source's AND-paired bounded ranges) is retained on its
+  own merits — monotonic severity ordering, §above — not because of any
+  remaining rendering limitation.
+adapter_kind: VMWARE
+resource_kind: HostSystem
+type: 15
+sub_type: 19
+wait_cycles: 1
+cancel_cycles: 1
+criticality: SYMPTOM_BASED
+impact:
+  badge: HEALTH
+symptom_sets:
+  operator: ANY
+  sets:
+    - defined_on: SELF
+      operator: ALL
+      symptoms:
+        - name: "ESXi Host License Remaining Days Critical"
+    - defined_on: SELF
+      operator: ALL
+      symptoms:
+        - name: "ESXi Host License Remaining Days Immediate"
+    - defined_on: SELF
+      operator: ALL
+      symptoms:
+        - name: "ESXi Host License Remaining Days Warning"
+    - defined_on: SELF
+      operator: ALL
+      symptoms:
+        - name: "ESXi Host License Remaining Days Info"

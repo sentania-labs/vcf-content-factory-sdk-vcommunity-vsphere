@@ -1,0 +1,134 @@
+id: 7dbe89b5-3ad1-4bf4-92da-20517356bcef
+name: 'Report: vSphere Data Center for CSV export'
+description: >-
+  A simple table for export as a CSV file. Used in report only, hence it has no formatting. Just like the rest of the report, it is designed for weekly, not daily nor monthly.
+
+  Schedule it to run end of the week, such as Sunday 23:59
+subject:
+  adapter_kind: VMWARE
+  resource_kind: Datacenter
+columns:
+- attribute: summary|total_number_clusters
+  display_name: Clusters
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_hosts
+  display_name: Hosts
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|number_running_hosts
+  display_name: Running Hosts
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_vms
+  display_name: VMs
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|number_running_vms
+  display_name: Running VMs
+  unit: 7002
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|number_poweredOff_vms
+  display_name: Powered Off VMs
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|capacity_provisioned
+  display_name: CPU Total Capacity
+  unit: ghz
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|haTotalCapacity_average
+  display_name: CPU Usable Capacity
+  unit: ghz
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|vm_capacity_provisioned
+  display_name: CPU Provisioned Capacity
+  unit: ghz
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|corecount_provisioned
+  display_name: CPU Total Cores
+  unit: 7001
+  is_property: false
+  is_string_attribute: false
+- attribute: mem|host_provisioned
+  display_name: Total Memory
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: mem|host_usable
+  display_name: Memory Usable Capacity
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_datastores
+  display_name: Datastores
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|avg_vm_density
+  display_name: VM to Host Ratio
+  is_property: false
+  is_string_attribute: false
+- attribute: reclaimable|vm_count
+  display_name: Reclaimable VM
+  is_property: false
+  is_string_attribute: false
+- attribute: reclaimable|cpu
+  display_name: Reclaimable CPU
+  unit: 7004
+  is_property: false
+  is_string_attribute: false
+- attribute: reclaimable|mem
+  display_name: Reclaimable Memory
+  unit: tb
+  is_property: false
+  is_string_attribute: false
+- attribute: reclaimable|idle_vms|vm_count
+  display_name: Reclaimable Idle VM
+  is_property: false
+  is_string_attribute: false
+- attribute: reclaimable|poweredOff_vms|vm_count
+  display_name: Reclaimable Powered-off VM
+  is_property: false
+  is_string_attribute: false
+- attribute: reclaimable|vm_snapshots|vm_count
+  display_name: Reclaimable Snapshots
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|inventoryChange|numCreate_latest
+  display_name: VM Created
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|inventoryChange|numDestroy_latest
+  display_name: VM Deleted
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|inventoryChange|numReconfigure_latest
+  display_name: VM Reconfigured
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|stateChange|numReset_latest
+  display_name: VM Reset
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|stateChange|numRebootGuest_latest
+  display_name: Guest OS Rebooted
+  is_property: false
+  is_string_attribute: false
+- attribute: vmop|stateChange|numPoweroff_latest
+  display_name: VM Powered Off
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|parentVcenter
+  display_name: vCenter Server
+  is_property: true
+  is_string_attribute: true
+- attribute: summary|tag
+  display_name: vSphere Tag
+  is_property: true
+  is_string_attribute: true
+time_window:
+  unit: DAYS
+  count: 7

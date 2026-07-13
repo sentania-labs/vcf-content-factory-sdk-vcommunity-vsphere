@@ -1,0 +1,38 @@
+id: f872c0eb-4db4-43bf-85ee-4332387352a9
+name: 'Report: Namespace for CSV export'
+description: >-
+  Lists the key configurations of a Namespace.
+subject:
+  adapter_kind: VMWARE
+  resource_kind: NamespaceV2
+columns:
+- attribute: summary|configStatus
+  display_name: Config Status
+  is_property: false
+  is_string_attribute: true
+- attribute: summary|total_number_pods
+  display_name: Pods
+  is_property: false
+  is_string_attribute: false
+- attribute: summary|total_number_vms
+  display_name: Total VMs
+  is_property: false
+  is_string_attribute: false
+- attribute: cpu|limit
+  display_name: CPU Limit
+  unit: auto
+  is_property: true
+  is_string_attribute: false
+- attribute: memory|limit
+  display_name: Memory Limit
+  unit: auto
+  is_property: true
+  is_string_attribute: false
+- attribute: storage|request_limit
+  display_name: Storage Request Limit
+  unit: auto
+  is_property: true
+  is_string_attribute: false
+time_window:
+  unit: DAYS
+  count: 7
