@@ -1,5 +1,34 @@
 # Changelog
 
+## build-12 — fix: ESXi host distribution views declared string properties as numeric metrics (2026-07-13)
+
+`fix(adapter): four ESXi host distribution views (Versions/Hardware/Power
+State/Maintenance Mode) — string resource properties were rendered as
+numeric metrics with fixed histograms, yielding empty distribution
+widgets on ESXi Host Details; now emit isProperty/isStringAttribute with
+dynamic DISCRETE buckets matching the vendor originals`
+
+No adapter source changes — bundled-content-only fix (view YAML), per
+`knowledge/context/api-surface/distribution_view_no_data.md`.
+
+- `ESXi Host Versions vCommunity`, `ESXi Host Hardware vCommunity`,
+  `ESXi Host Power State vCommunity`, `ESXi Host Maintenance Mode
+  vCommunity` declared string resource PROPERTIES (`summary|version`,
+  `hardware|vendorModel`, `runtime|powerState`,
+  `runtime|maintenanceState`) as numeric METRICS with a fixed
+  [0,100]/10-bucket histogram. The widget queried the metric subsystem
+  for a numeric metric that does not exist, producing "No data to
+  display" / "Metrics displaying 0 of 23" on the ESXi Host Details
+  dashboard's distribution widgets.
+- Added `is_property: true` + `is_string_attribute: true` per column,
+  and view-level `buckets: {dynamic: true, calc_function: DISCRETE}`,
+  matching the vendor's known-working originals (same UUIDs).
+- Verified emitted ViewDef XML in the built pak carries
+  `isStringAttribute="true"`, `isProperty="true"`, `isDynamic="true"`,
+  and `dynamicCalcFunction="DISCRETE"` on all four views.
+- `validate-sdk`: clean. `build-sdk`: clean. `pak-compare`: 0 BLOCKING
+  against the closest reference pak.
+
 ## build-11 — rebuild: dashboard self-provider widget binding fixes (2026-07-13)
 
 `fix(framework): rebuild on factory PR #54 (dashboard renderer
