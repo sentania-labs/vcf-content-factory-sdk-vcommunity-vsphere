@@ -1,6 +1,6 @@
 # Changelog
 
-## build-13 — fix: DEF-012 — remaining string-property distribution views ship as numeric histograms (2026-07-14)
+## build-13 — fix: DEF-012 (content-side) — remaining string-property distribution views ship as numeric histograms (2026-07-14)
 
 `fix(adapter): 17 string/boolean-property distribution views (six ESXi
 Configuration 2.0 siblings, vSphere Switch Version, vSphere Cluster
@@ -10,10 +10,16 @@ root cause as build-12's four ESXi Host Details views, on the
 un-remediated remainder; now emit isProperty/isStringAttribute with
 dynamic DISCRETE buckets matching the vendor originals`
 
-Closes DEF-012 (`knowledge/context/defects.md`). Full sweep of all 51
-distribution views in `views/*.yaml`, cross-checked against the vendor
-original XML (`reference/references/vmbro_vcf_operations_vcommunity/…`)
-as ground truth for isProperty/isStringAttribute/buckets shape.
+Remediates DEF-012 (`knowledge/context/defects.md`) content-side;
+closure pending live devel render proof — DEF-012's closing criterion is
+a build carrying these fixes rendering live data in the browser on
+devel (the internal export endpoint cannot compute DISCRETE buckets, so
+static/extracted-pak verification cannot substitute — see
+`knowledge/context/api-surface/distribution_view_no_data.md` Q1). Full
+sweep of all 51 distribution views in `views/*.yaml`, cross-checked
+against the vendor original XML
+(`reference/references/vmbro_vcf_operations_vcommunity/…`) as ground
+truth for isProperty/isStringAttribute/buckets shape.
 
 - Fixed (17), all now `is_property: true` + `buckets: {dynamic: true,
   calc_function: DISCRETE}`, `is_string_attribute` matching vendor
