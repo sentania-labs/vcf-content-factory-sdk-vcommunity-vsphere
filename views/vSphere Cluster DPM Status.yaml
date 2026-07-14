@@ -9,6 +9,11 @@ presentation: donut-chart
 columns:
 - attribute: configuration|dpmConfiginfo|enabled
   display_name: DPM Enabled?
+  is_property: true
+  is_string_attribute: true
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
 time_window:
   unit: DAYS
   count: 7
