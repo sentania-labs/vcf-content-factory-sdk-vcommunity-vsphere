@@ -74,6 +74,10 @@ in sync with your real config fields (regenerate the docset after changing
 4. Fill in the configuration fields above.
 5. Click **Validate Connection**, then **Add**.
 6. The adapter discovers resources and begins collecting on the next cycle.
+7. **Enable policy metrics.** Bundled super metrics and two default-disabled
+   VMWARE HostSystem network attributes still need enabling in **Configure →
+   Policies** before their widgets show data — see "Post-install: policy
+   enablement" in the pak [`README.md`](../README.md#post-install-policy-enablement).
 
 ## Troubleshooting
 
@@ -82,3 +86,6 @@ in sync with your real config fields (regenerate the docset after changing
 
 - **Test Connection fails on TLS** — the target certificate is untrusted.
   Set `allowInsecure=true` or import the certificate.
+- **SM-driven widgets show "No data" after a clean install** — expected;
+  see step 7 above. Super metrics and two network attributes ship
+  unactivated by design and need enabling in the policy.

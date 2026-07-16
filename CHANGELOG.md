@@ -1,5 +1,28 @@
 # Changelog
 
+## docs — post-install policy-enablement guidance, no build bump (2026-07-16)
+
+`docs(adapter): document post-install policy-enablement requirements
+(unactivated super metrics + two default-disabled HostSystem network
+attributes)`
+
+Doc-only round; no adapter content, Java, or pak artifact changed, so
+`build_number` is not bumped.
+
+- Added a "Post-install: policy enablement" section to `README.md`
+  covering two requirements users hit after install: (1) the ~30 bundled
+  super metrics ship assigned but unactivated in any policy (matching the
+  source pack), so every SM-driven widget shows "No data" until enabled
+  under Configure → Policies → Metrics and Properties; (2) two VMWARE
+  HostSystem attributes needed by the Bad Network Packets chain
+  (`net|packetsRx_summation`, `net|packetsTx_summation`) are disabled by
+  default and must also be enabled for `ESXi Bad Network Packets` (and its
+  roll-up into `vSphere Cluster Performance` / `vSphere Clusters not
+  Green`) to compute.
+- `docs/installing.md` cross-references the README section as
+  step 7 of Step-by-Step Installation and adds a matching Troubleshooting
+  bullet for "No data" widgets after a clean install.
+
 ## build-13 — fix: DEF-012 (content-side) — remaining string-property distribution views ship as numeric histograms (2026-07-14)
 
 `fix(adapter): 17 string/boolean-property distribution views (six ESXi
