@@ -98,6 +98,28 @@ cycle and caches the last-good parse — a transient fetch failure degrades to t
 previous cycle's lists (never silently to empty), and `test()` plus the
 `vCommunityWorld` `config_file_status` property report per-file status.
 
+## Post-install: policy enablement
+
+Two things a fresh install does **not** do for you — both are one-time
+per-policy edits in **Configure → Policies**, not adapter bugs:
+
+- **Super metrics ship unactivated.** All ~30 bundled SMs are assigned to
+  their resourceKinds but not enabled in any policy (matching the source
+  pack's own behavior). Every SM-driven widget — `Cluster Performance`
+  HealthCharts, `Clusters not Green`, and the rest — shows "No data" until
+  you enable them. Edit the policy governing your vSphere objects →
+  **Metrics and Properties** → filter to **Super Metrics** → enable the
+  ones you use → save.
+- **Two VMWARE HostSystem metrics needed by the Bad Network Packets chain
+  are disabled by default:** `net|packetsRx_summation` and
+  `net|packetsTx_summation`. The `ESXi Bad Network Packets` SM (and its
+  roll-up into `vSphere Cluster Performance` / `vSphere Clusters not
+  Green`) computes nothing until you also enable these two base attributes,
+  in the same **Metrics and Properties** editor, on HostSystem.
+
+Do both edits together — the base attributes and the super metrics that
+consume them — before judging any of the above widgets as broken.
+
 ## Events (TOOLSET GAP #1)
 
 The original emits host install-date read failures as foreign-resource
