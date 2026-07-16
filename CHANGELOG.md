@@ -1,5 +1,63 @@
 # Changelog
 
+## build-13 — fix: DEF-012 (content-side) — remaining string-property distribution views ship as numeric histograms (2026-07-14)
+
+`fix(adapter): 17 string/boolean-property distribution views (six ESXi
+Configuration 2.0 siblings, vSphere Switch Version, vSphere Cluster
+DRS/HA/DPM Status + DRS Automation Level/Status + Admission Control
+Policy/status, and 3 Port Group security-policy distributions) — same
+root cause as build-12's four ESXi Host Details views, on the
+un-remediated remainder; now emit isProperty/isStringAttribute with
+dynamic DISCRETE buckets matching the vendor originals`
+
+Remediates DEF-012 (`knowledge/context/defects.md`) content-side;
+closure pending live devel render proof — DEF-012's closing criterion is
+a build carrying these fixes rendering live data in the browser on
+devel (the internal export endpoint cannot compute DISCRETE buckets, so
+static/extracted-pak verification cannot substitute — see
+`knowledge/context/api-surface/distribution_view_no_data.md` Q1). Full
+sweep of all 51 distribution views in `views/*.yaml`, cross-checked
+against the vendor original XML
+(`reference/references/vmbro_vcf_operations_vcommunity/…`) as ground
+truth for isProperty/isStringAttribute/buckets shape.
+
+- Fixed (17), all now `is_property: true` + `buckets: {dynamic: true,
+  calc_function: DISCRETE}`, `is_string_attribute` matching vendor
+  exactly per-view:
+  - `ESXi BIOS version distribution` (`hardware|biosVersion`, string)
+  - `ESXi CPU Models` (`cpu|cpuModel`, string)
+  - `ESXi Distribution by Versions` (`summary|version`, string)
+  - `ESXi HyperThread Capability` (`config|hyperThread|available`, string)
+  - `ESXi Power Management` (`hardware|powerManagementPolicy`, string)
+  - `ESXi Power Management BIOS` (`hardware|powerManagementTechnoloy`, string)
+  - `vSphere Switch Version` (`summary|version`, string)
+  - `vSphere Cluster DPM Status` (`configuration|dpmConfiginfo|enabled`, string)
+  - `vSphere Cluster DRS Automation Status` (`configuration|drsconfig|defaultVmBehavior`, string)
+  - `vSphere Cluster DRS Status` (`configuration|drsConfig|enabled`, string)
+  - `vSphere Cluster HA Admission Control status` (`configuration|dasConfig|admissionControlEnabled`, string)
+  - `vSphere Cluster HA Status` (`configuration|dasConfig|enabled`, string)
+  - `vSphere Port Group Forged Transmit Allowed` (`config|policies|security|forged_transmits`, string)
+  - `vSphere Port Group MAC Address Change` (`config|policies|security|mac_changes`, string)
+  - `vSphere Port Group Promiscuous Mode Allowed` (`config|policies|security|allow_promiscuous`, string)
+  - `vSphere Cluster Admission Control Policy` (`configuration|dasConfig|admissionControlPolicyId`,
+    **not** a string — vendor declares `isStringAttribute=false` for this
+    one; matched vendor exactly)
+  - `vSphere Cluster DRS Automation Level` (`configuration|drsconfig|vmotionRate`,
+    **not** a string — vendor declares `isStringAttribute=false`; matched
+    vendor exactly)
+- Deliberately left alone: the 8 numeric-range distributions on ESXi
+  Configuration 2.0 and siblings (CPU cores/GHz/sockets/speed, memory
+  size, NIC speed/count, storage path counts) — genuinely numeric,
+  already confirmed populating correctly on both prod and devel per
+  `knowledge/context/reviews/esxi-configuration-20-dashboard-comparison.md`;
+  converting these to the vendor's own isProperty=true encoding would
+  risk breaking a currently-working numeric-metric collection path this
+  adapter uses instead of the vendor's property-based one. All other
+  distribution views in `views/*.yaml` (VM-level and cluster-level
+  numeric/metric distributions — CPU ready %, latency, contention,
+  reservation, capacity, snapshot size, disk/VMDK/RDM counts, etc.) use
+  genuine metric or count attributes and were left unmodified.
+
 ## build-12 — fix: ESXi host distribution views declared string properties as numeric metrics (2026-07-13)
 
 `fix(adapter): four ESXi host distribution views (Versions/Hardware/Power

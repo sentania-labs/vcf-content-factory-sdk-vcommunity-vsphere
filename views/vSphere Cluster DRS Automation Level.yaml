@@ -10,6 +10,11 @@ presentation: donut-chart
 columns:
 - attribute: configuration|drsconfig|vmotionRate
   display_name: .
+  is_property: true
+  is_string_attribute: false
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
 time_window:
   unit: DAYS
   count: 7

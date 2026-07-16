@@ -9,6 +9,11 @@ data_type: distribution
 columns:
 - attribute: config|policies|security|forged_transmits
   display_name: .
+  is_property: true
+  is_string_attribute: true
+buckets:
+  dynamic: true
+  calc_function: DISCRETE
 time_window:
   unit: DAYS
   count: 7
