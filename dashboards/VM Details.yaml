@@ -603,7 +603,7 @@ widgets:
     y: 15
     w: 4
     h: 8
-  view: Windows Services vCommunity
+  view: ae751947-1782-466f-b560-9a950be3c1f9
 - id: da3e49a4-400c-4d90-9790-e2a50fe97f69
   type: AlertList
   title: Active Alerts (for selected VM)
